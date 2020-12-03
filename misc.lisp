@@ -1,5 +1,26 @@
 (in-package #:3b-mmath/misc)
 
+(defun ulp= (a b &key (bits 1))
+  (assert (typep a 'float))
+  (assert (eql (type-of a) (type-of b)))
+  (cond
+    ((= a b)
+     ;; exactly the same
+     t)
+    ((not (eql (minusp a) (minusp b)))
+     ;; numbers with opposite sign not equal (aside from +-0)
+     nil)
+    (t
+     (etypecase a
+       (single-float
+        (let ((ab (float-features:single-float-bits a))
+              (bb (float-features:single-float-bits b)))
+          (<= (print (abs (- ab bb))) bits)))
+       (double-float
+        (let ((ab (float-features:double-float-bits a))
+              (bb (float-features:double-float-bits b)))
+          (<= (abs (- ab bb)) bits)))))))
+
 (defun canonical-endian (endian)
   (ecase endian
     (:native

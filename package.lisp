@@ -23,7 +23,8 @@
    #:matrix-type-designator
    #:nibbles-setter
    #:matrix-type-permutation
-   #:ffi-type))
+   #:ffi-type
+   #:ulp=))
 
 (defpackage #:3b-mmath/opt
   (:use :cl)
