@@ -4,7 +4,11 @@
 
 It is a "meta library" in the sense that it doesn't directly have
 functions for the usual operations like matrix multiply, instead it
-has macros for generating multiple variants of those functions.
+has macros for generating multiple variants of those functions. It is
+mostly intended for graphics (up to 4x4 matrices), so completely
+unrolls all operations. It might eventually gain ability to handle
+large matrices more reasonably, but existing libraries probably handle
+that better.
 
 For example, the macros allow generating an unrolled and partially
 optimized matrix multiply with sources and destination in any of:
@@ -17,8 +21,9 @@ optimized matrix multiply with sources and destination in any of:
 * MxN elements at arbitrary location relative to a CFFI pointer
 * A set of slots in a struct
 * MxN values (numbers or variables)
-* A single value replicated to all elements
-* An X,Y, or Z rotation matrix with a specified angle
+* submatrix, slices, diagonal, or arbitrary permutation of a larger matrix
+* A single value replicated to all elements (source only)
+* An X,Y, or Z rotation matrix with a specified angle (source only)
 
 some examples:
 

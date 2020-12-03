@@ -21,7 +21,9 @@
    #:all-of-type
    #:accesses-overlap
    #:matrix-type-designator
-   #:nibbles-setter))
+   #:nibbles-setter
+   #:matrix-type-permutation
+   #:ffi-type))
 
 (defpackage #:3b-mmath/opt
   (:use :cl)
@@ -52,7 +54,11 @@
    #:binds
    #:struct
    #:literal/rot
-   #:scalar))
+   #:scalar
+   #:vec/sub
+   #:vec/slice
+   #:vec/diagonal
+   #:vec/transpose))
 
 (defpackage #:3b-mmath/matrix
   (:use :cl #:3b-mmath/misc #:3b-mmath/opt)

@@ -95,14 +95,54 @@
        (single-float nibbles::ieee-single-set/be nibbles::ieee-single-set/le)
        (double-float nibbles::ieee-double-set/be nibbles::ieee-double-set/le)))))
 
+(cffi:defctype half (:wrapper :uint16
+                     :from-c float-features:bits-short-float
+                     :to-c float-features:short-float-bits))
 
+(defun ffi-type (type)
+  (macrolet ((c ((ltype ffi) &rest clauses)
+               `(cond
+                  ,@ (loop for (l f) in (list* (list ltype) clauses)
+                           collect `((equalp type ',l)
+                                     ',f))
+                     (t (error "unknown type ~s?" type)))))
+      (c
+       ((signed-byte 8) :int8)
+       ((signed-byte 16) :int16)
+       ((signed-byte 32) :int32)
+       ((signed-byte 64) :int64)
+
+       ((unsigned-byte 8) :uint8)
+       ((unsigned-byte 16) :uint16)
+       ((unsigned-byte 32) :uint32)
+       ((unsigned-byte 64) :uint64)
+
+       ((:half-float short-float) half)
+       (single-float :float)
+       (double-float :double))))
+
+
+
+(deftype unsigned-fixnum () '(and fixnum unsigned-byte))
+
+(defun %permute/major (r c row-major)
+  (let ((a (make-array (list r c) :initial-element 0
+                                  :element-type 'unsigned-fixnum)))
+    (loop for i below r
+          do (loop for j below c
+                   for p = (if row-major
+                               (+ j (* i c))
+                               (+ i (* j r)))
+                   do (setf (aref a i j) p)))
+    a))
 
 (defstruct matrix-type
   (rows 4 :type (and fixnum (integer 1)))
   (columns 4 :type (and fixnum (integer 1)))
   (type 'single-float :type symbol)
   (row-major nil :type (or t nil))
-  (stride 4 :type (and fixnum (integer 1))))
+  (stride 4 :type (and fixnum (integer 1)))
+  (permutation (%permute/major 4 4 nil) :type (simple-array unsigned-fixnum 2)))
 
 ;; possibly some of these should be stored directly in struct?
 (defun matrix-type-elements (matrix-type)
@@ -124,9 +164,9 @@
                     *matrix-types*
                     (make-matrix-type :rows rows :columns columns
                                       :type type :row-major row-major
-                                      :stride stride)))
-#++
-(intern-matrix-type 4 1)
+                                      :stride stride
+                                      :permutation (%permute/major
+                                                    rows columns row-major))))
 
 ;; nibbles-style accessors for half floats
 (declaim (inline half-ref/le (setf half-ref/le)
@@ -137,15 +177,19 @@
 
 (defun (setf half-ref/le) (new vector index)
   (setf (nibbles:ub16ref/le vector index)
-        (float-features:short-float-bits new)))
+        (float-features:short-float-bits new))
+  new)
 
 (defun half-ref/be (vector index)
   (float-features:bits-short-float (nibbles:ub16ref/be vector index)))
 
 (defun (setf half-ref/be) (new vector index)
   (setf (nibbles:ub16ref/be vector index)
-        (float-features:short-float-bits new)))
+        (float-features:short-float-bits new))
+  new)
 
+;; TODO: this should probably go away once new permutation stuff is done
+#++
 (defun index (type i-row j-col &key (row-major nil row-major-p))
   "convert i,j index into linear index for matrix TYPE. Not really
 intended for speed. Errors if I,J outside matrix shape."
@@ -161,12 +205,15 @@ intended for speed. Errors if I,J outside matrix shape."
         (+ j-col (* i-row n))
         (+ i-row (* j-col m)))))
 
+(defun index (type i-row j-col)
+  "get (permuted) linear index of element I,J in type TYPE"
+  (aref (matrix-type-permutation type) i-row j-col))
+
 
 
 
 (defun all-of-type (type &rest r)
   (every (lambda (a) (typep a type)) r))
-
 
 (defun accesses-overlap (a b)
   (and a b
@@ -175,11 +222,6 @@ intended for speed. Errors if I,J outside matrix shape."
            (and (eql av bv)
                 (or (<= as bs ae)
                     (<= as be ae)))))))
-
-#++(accesses-overlap '(a 0 15) '(a 0 15))
-#++(accesses-overlap '(a 0 15) '(a 15 16))
-#++(accesses-overlap '(a 12 18) '(a 0 15))
-#++(accesses-overlap '(a 0 15) '(a 16 31))
 
 (defun matrix-type-designator (type)
   (etypecase type
