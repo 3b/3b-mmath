@@ -144,6 +144,7 @@ RADIANS around AXIS"
             (matrix-type-rows matrix-type) (matrix-type-columns matrix-type)))
   (let* ((c (gensym "C"))
          (s (gensym "S"))
+         (type (matrix-type-type matrix-type))
          (elements
            (ecase axis
              ;; todo: accept axis = (x y z) for angle-axis?
@@ -167,8 +168,8 @@ RADIANS around AXIS"
      (lambda (x)
        (elt elements x))
      matrix-type
-     :binds `((,c (cos ,radians))
-              (,s (sin ,radians)))
+     :binds `((,c (coerce (cos ,radians) ',type))
+              (,s (coerce (sin ,radians) ',type)))
      :permute (permute/sub matrix-type
                            0 0
                            (3b-mmath/misc::%permute/major 4 4 t)
