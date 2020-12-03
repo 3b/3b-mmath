@@ -189,6 +189,11 @@
                                       :permutation (%permute/major
                                                     rows columns row-major))))
 
+(defun intern-matrix-type* (rows columns base-type)
+  (intern-matrix-type rows columns
+                      :type (matrix-type-type base-type)
+                      :row-major (matrix-type-row-major base-type)))
+
 ;; nibbles-style accessors for half floats
 (declaim (inline half-ref/le (setf half-ref/le)
                  half-ref/be (setf half-ref/be)))
@@ -252,3 +257,6 @@ intended for speed. Errors if I,J outside matrix shape."
      (matrix-type-designator (symbol-value type)))
     (cons
      (apply #'intern-matrix-type type))))
+
+
+

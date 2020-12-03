@@ -24,7 +24,8 @@
    #:nibbles-setter
    #:matrix-type-permutation
    #:ffi-type
-   #:ulp=))
+   #:ulp=
+   #:intern-matrix-type*))
 
 (defpackage #:3b-mmath/opt
   (:use :cl)
@@ -56,10 +57,14 @@
    #:struct
    #:literal/rot
    #:scalar
-   #:vec/sub
-   #:vec/slice
-   #:vec/diagonal
-   #:vec/transpose))
+   #:accessor-designator
+   #:submatrix
+   #:row
+   #:column
+   #:antidiagonal
+   #:diagonal
+   #:submatrix*
+   #:transpose))
 
 (defpackage #:3b-mmath/matrix
   (:use :cl #:3b-mmath/misc #:3b-mmath/opt)

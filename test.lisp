@@ -736,42 +736,35 @@
         (fail (ag:ffivec m4 p :element-stride 2))
         (fail (ag:ffivec m4 p :buffer-size 12))))))
 
-(define-test (accessor vec/sub)
+(define-test (accessor submatrix)
   (let* ((a (mv 4 4
                 0 1 2 3
                 4 5 6 7
                 8 9 10 11
                 12 13 14 15))
          ;; columns, as column vectors
-         (c0 (finish (ag:vec/sub v4 0 0 m4 a)))
-         (c1 (finish (ag:vec/sub v4 0 1 m4 a)))
-         (c2 (finish (ag:vec/sub v4 0 2 m4 a)))
-         (c3 (finish (ag:vec/sub v4 0 3 m4 a)))
-         ;; column as row vector
-         (c2r (finish (ag:vec/sub v4r 0 2 m4 a :transpose t)))
-         ;; row as column vector
-         (r1 (finish (ag:vec/sub v4 1 0 m4 a :transpose t)))
+         (c0 (finish (ag:submatrix 4 1 0 0 (ag:vec m4 a))))
+         (c1 (finish (ag:submatrix 4 1 0 1 (ag:vec m4 a))))
+         (c2 (finish (ag:submatrix 4 1 0 2 (ag:vec m4 a))))
+         (c3 (finish (ag:submatrix 4 1 0 3 (ag:vec m4 a))))
          ;; row as row vector
-         (r3 (finish (ag:vec/sub v4r 3 0 m4 a)))
+         (r3 (finish (ag:submatrix 1 4 3 0 (ag:vec m4 a))))
          ;; 2x2s
-         (m2@00 (finish (ag:vec/sub m2 0 0 m4 a)))
-         (m2@11 (finish (ag:vec/sub m2 1 1 m4 a)))
-         (m2@22 (finish (ag:vec/sub m2 2 2 m4 a)))
-         )
+         (m2@00 (finish (ag:submatrix 2 2 0 0 (ag:vec m4 a))))
+         (m2@11 (finish (ag:submatrix 2 2 1 1 (ag:vec m4 a))))
+         (m2@22 (finish (ag:submatrix 2 2 2 2 (ag:vec m4 a)))))
     (of-type 'ag::accessor c1)
     (ac= c0 #2a ((0) (4) (8) (12)))
     (ac= c1 #2a ((1) (5) (9) (13)))
     (ac= c2 #2a ((2) (6) (10) (14)))
     (ac= c3 #2a ((3) (7) (11) (15)))
-    (ac= c2r #2a ((2 6 10 14)))
 
-    (ac= r1 #2a((4) (5) (6) (7)))
     (ac= r3 #2a((12 13 14 15)))
 
-    (fail (ag:vec/sub v4 -1 -1 m4 a))
-    (fail (ag:vec/sub v4 -1 0 m4 a))
-    (fail (ag:vec/sub v4 1 1 m4 a))
-    (fail (ag:vec/sub v4 0 4 m4 a))
+    (fail (ag:submatrix 4 1 -1 -1 (ag:vec m4 a)))
+    (fail (ag:submatrix 4 1 -1 0 (ag:vec m4 a)))
+    (fail (ag:submatrix 4 1 1 1 (ag:vec m4 a)))
+    (fail (ag:submatrix 4 1 0 4 (ag:vec m4 a)))
 
     (ac= m2@00 #2a((0 1)
                    (4 5)))
@@ -780,45 +773,33 @@
     (ac= m2@22 #2a((10 11)
                    (14 15)))
 
-    (fail (ag:vec/sub m2 -1 -1 m4 a))
-    (fail (ag:vec/sub m2 -1 0 m4 a))
-    (fail (ag:vec/sub m2 3 3 m4 a))
-    (fail (ag:vec/sub m2 0 4 m4 a))
-    (fail (ag:vec/sub m2 4 0 m4 a))
+    (fail (ag:submatrix 2 2 -1 -1 (ag:vec m4 a)))
+    (fail (ag:submatrix 2 2 -1 0 (ag:vec m4 a)))
+    (fail (ag:submatrix 2 2 3 3 (ag:vec m4 a)))
+    (fail (ag:submatrix 2 2 0 4 (ag:vec m4 a)))
+    (fail (ag:submatrix 2 2 4 0 (ag:vec m4 a)))
 
 
 ))
 
-(define-test (accessor vec/slice)
+(define-test (accessor submatrix*)
   (let* ((a (mv 4 4
                 0 1 2 3
                 4 5 6 7
                 8 9 10 11
                 12 13 14 15))
          ;; columns, as column vectors
-         (c0 (finish (ag:vec/slice v4 #*1111 #*1000 m4 a)))
-         ;; column as row vector
-         (c2r (finish (ag:vec/slice v4r #*1111 #*0010 m4 a :transpose t)))
-         ;; row as column vector
-         (r1 (finish (ag:vec/slice v4 #*0100 #*1111 m4 a :transpose t)))
+         (c0 (finish (ag:submatrix* #*1111 #*1000 (ag:vec m4 a))))
          ;; row as row vector
-         (r3 (finish (ag:vec/slice v4r #*0001 #*1111 m4 a)))
+         (r3 (finish (ag:submatrix* #*0001 #*1111 (ag:vec m4 a))))
          ;; 2x2s
-         (m2@x (finish (ag:vec/slice m2 #*0110 #*0110 m4 a)))
-         (m2@y (finish (ag:vec/slice m2 #*1010 #*1010 m4 a)))
-         (m2@z (finish (ag:vec/slice m2 #*1100 #*1100 m4 a)))
+         (m2@x (finish (ag:submatrix* #*0110 #*0110 (ag:vec m4 a))))
+         (m2@y (finish (ag:submatrix* #*1010 #*1010 (ag:vec m4 a))))
+         (m2@z (finish (ag:submatrix* #*1100 #*1100 (ag:vec m4 a))))
          )
     (of-type 'ag::accessor c0)
     (ac= c0 #2a ((0) (4) (8) (12)))
-    (ac= c2r #2a ((2 6 10 14)))
-
-    (ac= r1 #2a((4) (5) (6) (7)))
     (ac= r3 #2a((12 13 14 15)))
-
-    (fail (ag:vec/slice v4 #*111 #*111 m4 a))
-    (fail (ag:vec/slice v4 #*11111 #*1111 m4 a))
-    (fail (ag:vec/slice v4 #*1111 #*11111 m4 a))
-    (fail (ag:vec/slice v4 #*0000 #*0000 m4 a))
 
     (ac= m2@x #2a((5 6)
                    (9 10)))
@@ -826,10 +807,10 @@
                    (8 10)))
     (ac= m2@z #2a((0 1)
                    (4 5)))
-
-    (fail (ag:vec/slice m2 #*1000 #*1100 m4 a))
-    (fail (ag:vec/slice m2 #*1110 #*1110 m4 a))
-    (fail (ag:vec/slice m2 #*00011 #*00011 m4 a))))
+    (fail (ag:submatrix* #*11111 #*1111 (ag:vec m4 a)))
+    (fail (ag:submatrix* #*1111 #*11111 (ag:vec m4 a)))
+    (fail (ag:submatrix* #*0000 #*0000 (ag:vec m4 a)))
+    (fail (ag:submatrix* #*00011 #*00011 (ag:vec m4 a)))))
 
 (define-test (accessor vec/diagonal)
   (let* ((a (mv 4 4
@@ -847,41 +828,22 @@
                 6 7 8
                 9 10 11))
          ;; diagonals, as column vector
-         (ca (finish (ag:vec/diagonal v4 m4 a)))
-         (cb (finish (ag:vec/diagonal v3 m3x4 b)))
-         (cc (finish (ag:vec/diagonal v3 m4x3 c)))
-         ;; as row vectors
-         (ra (finish (ag:vec/diagonal v4r m4 a)))
-         (rb (finish (ag:vec/diagonal v3r m3x4 b)))
-         (rc (finish (ag:vec/diagonal v3r m4x3 c)))
+         (ca (finish (ag:diagonal (ag:vec m4 a))))
+         (cb (finish (ag:diagonal (ag:vec m3x4 b))))
+         (cc (finish (ag:diagonal (ag:vec m4x3 c))))
 
          ;; antidiagonals, as column vector
-         (aca (finish (ag:vec/diagonal v4 m4 a :anti t)))
-         (acb (finish (ag:vec/diagonal v3 m3x4 b :anti t)))
-         (acc (finish (ag:vec/diagonal v3 m4x3 c :anti t)))
-         ;; as row vectors
-         (ara (finish (ag:vec/diagonal v4r m4 a :anti t)))
-         (arb (finish (ag:vec/diagonal v3r m3x4 b :anti t)))
-         (arc (finish (ag:vec/diagonal v3r m4x3 c :anti t))))
+         (aca (finish (ag:antidiagonal (ag:vec m4 a))))
+         (acb (finish (ag:antidiagonal (ag:vec m3x4 b))))
+         (acc (finish (ag:antidiagonal (ag:vec m4x3 c)))))
     (of-type 'ag::accessor ca)
     (ac= ca #2a ((0) (5) (10) (15)))
     (ac= cb #2a ((0) (5) (10)))
     (ac= cc #2a ((0) (4) (8)))
 
-    (ac= ra #2a ((0 5 10 15)))
-    (ac= rb #2a ((0 5 10)))
-    (ac= rc #2a ((0 4 8)))
-
     (ac= aca #2a ((3) (6) (9) (12)))
     (ac= acb #2a ((3) (6) (9)))
-    (ac= acc #2a ((2) (4) (6)))
-
-    (ac= ara #2a ((3 6 9 12)))
-    (ac= arb #2a ((3 6 9)))
-    (ac= arc #2a ((2 4 6)))
-
-    (fail (ag:vec/diagonal m2x4 m4 a))
-    (fail (ag:vec/diagonal m4x2 m4 a))))
+    (ac= acc #2a ((2) (4) (6)))))
 
 (define-test (accessor vec/transpose)
   (let* ((a (mv 4 4
@@ -900,11 +862,11 @@
                 9 10 11))
          (v (mv 4 1 0 1 2 3))
          (r (mv 1 4 0 1 2 3))
-         (ta (finish (ag:vec/transpose m4 m4 a)))
-         (tb (finish (ag:vec/transpose m4x3 m3x4 b)))
-         (tc (finish (ag:vec/transpose m3x4 m4x3 c)))
-         (tr (finish (ag:vec/transpose v4 v4r r)))
-         (tv (finish (ag:vec/transpose v3r v3 v))))
+         (ta (finish (ag:transpose (ag:vec m4 a))))
+         (tb (finish (ag:transpose (ag:vec m3x4 b))))
+         (tc (finish (ag:transpose (ag:vec m4x3 c))))
+         (tr (finish (ag:transpose (ag:vec v4r r))))
+         (tv (finish (ag:transpose (ag:vec v3 v)))))
     (of-type 'ag::accessor ta)
     (ac= ta #2a ((0 4 8 12)
                  (1 5 9 13)
@@ -919,33 +881,7 @@
                  (2 5 8 11)))
 
     (ac= tr #2a ((0) (1) (2) (3)))
-    (ac= tv #2a ((0 1 2)))
-
-    ;; not sure if transposed submatrices should be allowed? currently
-    ;; is
-
-    ;;(fail (ag:vec/transpose m2x4 m4 a))
-    ;;(fail (ag:vec/transpose m4x2 m4x2 a))
-    ;;(fail (ag:vec/transpose m3 m4 a))
-    (let ((a2x4 (finish (ag:vec/transpose m2x4 m4 a)))
-          (a4x2 (finish (ag:vec/transpose m4x2 m4 a)))
-          (a3 (finish (ag:vec/transpose m3 m4 a))))
-      (ac= a2x4 #2a((0 4 8 12)
-                    (1 5 9 13)))
-      (ac= a4x2 #2a((0 4)
-                    (1 5)
-                    (2 6)
-                    (3 7)))
-      (ac= a3 #2a ((0 4 8)
-                   (1 5 9)
-                   (2 6 10))))
-    (fail (ag:vec/transpose m2x4 m2x4 a))
-    (fail (ag:vec/transpose m2x4 m3 a))
-    (fail (ag:vec/transpose m4 m3 a))
-    (fail (ag:vec/transpose m4 m2x4 a))
-    (fail (ag:vec/transpose m4 m4x2 a))
-
-)))
+    (ac= tv #2a ((0 1 2)))))
 
 
 

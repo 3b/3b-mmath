@@ -9,4 +9,5 @@
                (:file "misc")
                (:file "opt")
                (:file "accessors")
+               (:file "permute")
                (:file "matrix")))
