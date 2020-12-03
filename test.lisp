@@ -55,6 +55,17 @@
 (defmtype v5 (5 1))
 (defmtype v3r (1 3))
 
+(defun 1+eps (n eps)
+  (let ((x (float 1 eps)))
+    (loop for i below n do (incf x eps))
+    x))
+
+(defun 1-eps (n eps)
+  (let ((x (float 1 eps)))
+    (loop for i below n do (decf x eps))
+    x))
+
+
 (define-test misc
   (true (mi:all-of-type 'fixnum 1 2 3 4))
   (false (mi:all-of-type 'fixnum 1 2.2 3 4))
@@ -74,9 +85,50 @@
     (is = 2.125s0 (setf (mi:half-ref/le a 0) 2.125s0))
     (is = 2.125s0 (mi:half-ref/le a 0))
     (is = -3.5s0 (setf (mi:half-ref/le a 0) -3.5s0))
-    (is = -3.5s0 (mi:half-ref/le a 0))))
+    (is = -3.5s0 (mi:half-ref/le a 0)))
+
+  (false (mi:ulp= 1.0 (1+eps 1 single-float-epsilon) :bits 0))
+  (true (mi:ulp= 1.0 (1+eps 1 single-float-epsilon) :bits 1))
+  (false (mi:ulp= 1.0 (1+eps 2 single-float-epsilon) :bits 1))
+  (true (mi:ulp= 1.0 (1+eps 2 single-float-epsilon) :bits 2))
+  (false (mi:ulp= 1.0 (1+eps 3 single-float-epsilon) :bits 2))
+  (true (mi:ulp= 1.0 (1+eps 3 single-float-epsilon) :bits 3))
+
+  (false (mi:ulp= 1.0 (1-eps 1 single-float-negative-epsilon) :bits 0))
+  (true (mi:ulp= 1.0 (1-eps 1 single-float-negative-epsilon) :bits 1))
+  (false (mi:ulp= 1.0 (1-eps 2 single-float-negative-epsilon) :bits 1))
+  (true (mi:ulp= 1.0 (1-eps 2 single-float-negative-epsilon) :bits 2))
+  (false (mi:ulp= 1.0 (1-eps 3 single-float-negative-epsilon) :bits 2))
+  (true (mi:ulp= 1.0 (1-eps 3 single-float-negative-epsilon) :bits 3))
+
+
+  (false (mi:ulp= 1d0 (1+eps 1 double-float-epsilon) :bits 0))
+  (true (mi:ulp= 1d0 (1+eps 1 double-float-epsilon) :bits 1))
+  (false (mi:ulp= 1d0 (1+eps 2 double-float-epsilon) :bits 1))
+  (true (mi:ulp= 1d0 (1+eps 2 double-float-epsilon) :bits 2))
+  (false (mi:ulp= 1d0 (1+eps 3 double-float-epsilon) :bits 2))
+  (true (mi:ulp= 1d0 (1+eps 3 double-float-epsilon) :bits 3))
+
+  (false (mi:ulp= 1d0 (1-eps 1 double-float-negative-epsilon) :bits 0))
+  (true (mi:ulp= 1d0 (1-eps 1 double-float-negative-epsilon) :bits 1))
+  (false (mi:ulp= 1d0 (1-eps 2 double-float-negative-epsilon) :bits 1))
+  (true (mi:ulp= 1d0 (1-eps 2 double-float-negative-epsilon) :bits 2))
+  (false (mi:ulp= 1d0 (1-eps 3 double-float-negative-epsilon) :bits 2))
+  (true (mi:ulp= 1d0 (1-eps 3 double-float-negative-epsilon) :bits 3))
+
+  ;; not sure if these should be ulp= or not?
+  (true (mi:ulp= most-positive-single-float
+                 sb-ext:single-float-positive-infinity))
+  (true (mi:ulp= most-negative-single-float
+                 sb-ext:single-float-negative-infinity))
+  (true (mi:ulp= most-positive-double-float
+                 sb-ext:double-float-positive-infinity))
+  (true (mi:ulp= most-negative-double-float
+                 sb-ext:double-float-negative-infinity)))
+
 #++
 (test 'misc)
+
 (define-test matrix-type
   (is = 2 (mi:matrix-type-rows m2x3))
   (is = 3 (mi:matrix-type-columns m2x3))
@@ -241,55 +293,84 @@
 
   ;; variants that could use /sub
   ;; column vector
-  (v= (ag::permute/slice v4 #*1111 #*1000 m4 nil) #(0 1 2 3))
-  (v= (ag::permute/slice v4 #*1111 #*0010 m4 nil) #(8 9 10 11))
+  (v= (ag::permute/slice v4 #*1111 #*1000 m4 nil) #2a((0) (1) (2) (3)))
+  (v= (ag::permute/slice v4 #*1111 #*0010 m4 nil) #2a((8) (9) (10) (11)))
   ;; column as row vector
-  (v= (ag::permute/slice v4r #*1111 #*1000 m4 t) #(0 1 2 3))
-  (v= (ag::permute/slice v4r #*1111 #*0010 m4 t) #(8 9 10 11))
+  (v= (ag::permute/slice v4r #*1111 #*1000 m4 t) #2a ((0 1 2 3)))
+  (v= (ag::permute/slice v4r #*1111 #*0010 m4 t) #2a ((8 9 10 11)))
 
   ;; row vector
-  (v= (ag::permute/slice v4r #*1000 #*1111 m4 nil) #(0 4 8 12))
-  (v= (ag::permute/slice v4r #*0010 #*1111 m4 nil) #(2 6 10 14))
+  (v= (ag::permute/slice v4r #*1000 #*1111 m4 nil) #2a ((0 4 8 12)))
+  (v= (ag::permute/slice v4r #*0010 #*1111 m4 nil) #2a ((2 6 10 14)))
   ;; row as column vector
-  (v= (ag::permute/slice v4 #*1000 #*1111 m4 t) #(0 4 8 12))
-  (v= (ag::permute/slice v4 #*0010 #*1111 m4 t) #(2 6 10 14))
+  (v= (ag::permute/slice v4 #*1000 #*1111 m4 t) #2a((0) (4) (8) (12)))
+  (v= (ag::permute/slice v4 #*0010 #*1111 m4 t) #2a((2) (6) (10) (14)))
   ;; row vector, row-major
-  (v= (ag::permute/slice v4r #*1000 #*1111 m4r nil) #(0 1 2 3))
-  (v= (ag::permute/slice v4r #*0010 #*1111 m4r nil) #(8 9 10 11))
+  (v= (ag::permute/slice v4r #*1000 #*1111 m4r nil) #2a ((0 1 2 3)))
+  (v= (ag::permute/slice v4r #*0010 #*1111 m4r nil) #2a ((8 9 10 11)))
   ;; row as column vector, row-major
-  (v= (ag::permute/slice v4 #*1000 #*1111 m4r t) #(0 1 2 3))
-  (v= (ag::permute/slice v4 #*0010 #*1111 m4r t) #(8 9 10 11))
+  (v= (ag::permute/slice v4 #*1000 #*1111 m4r t) #2a((0) (1) (2) (3)))
+  (v= (ag::permute/slice v4 #*0010 #*1111 m4r t) #2a((8) (9) (10) (11)))
 
 
   ;; 2x2
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4 nil) #(0 1 4 5))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4 nil) #(10 11 14 15))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4r nil) #(0 4 1 5))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4r nil) #(10 14 11 15))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4 t) #(0 4 1 5))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4 t) #(10 14 11 15))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4r t) #(0 1 4 5))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4r t) #(10 11 14 15))
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4 nil) #2a((0 4)
+                                                      (1 5)))
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4 nil) #2a((10 14)
+                                                      (11 15)))
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4r nil) #2a((0 1)
+                                                       (4 5)))
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4r nil) #2a((10 11)
+                                                       (14 15)))
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4 t) #2a((0 1)
+                                                    (4 5)))
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4 t) #2a((10 11)
+                                                    (14 15)))
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4r t) #2a((0 4)
+                                                     (1 5)))
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4r t) #2a((10 14)
+                                                     (11 15)))
 
   ;; non-contiguous submatrices
 
   ;; rows/columns
-  (v= (ag::permute/slice m4x2 #*1111 #*1010 m4 nil) #(0 1 2 3 8 9 10 11))
-  (v= (ag::permute/slice m2x4 #*1010 #*1111 m4 nil) #(0 2 4 6 8 10 12 14))
+  (v= (ag::permute/slice m4x2 #*1111 #*1010 m4 nil) #2a((0 8)
+                                                        (1 9)
+                                                        (2 10)
+                                                        (3 11)))
+  (v= (ag::permute/slice m2x4 #*1010 #*1111 m4 nil) #2a((0 4 8 12)
+                                                        (2 6 10 14)))
   ;; (various combinations used by determinant)
   ;; remove top row and middle column etc
-  (v= (ag::permute/slice m3 #*0111 #*1011 m4 nil) #(1 2 3 9 10 11 13 14 15))
-  (v= (ag::permute/slice m3 #*0111 #*1101 m4 nil) #(1 2 3 5 6 7 13 14 15))
-  (v= (ag::permute/slice m2 #*0011 #*1010 m4 nil) #(2 3 10 11))
-  (v= (ag::permute/slice m2 #*0011 #*1001 m4 nil) #(2 3 14 15))
-  (v= (ag::permute/slice m2 #*0011 #*0101 m4 nil) #(6 7 14 15))
+  (v= (ag::permute/slice m3 #*0111 #*1011 m4 nil) #2a((1 9 13)
+                                                      (2 10 14)
+                                                      (3 11 15)))
+  (v= (ag::permute/slice m3 #*0111 #*1101 m4 nil) #2a((1 5 13)
+                                                      (2 6 14 )
+                                                      (3 7 15))
+)
+  (v= (ag::permute/slice m2 #*0011 #*1010 m4 nil) #2a((2 10)
+                                                      (3 11)))
+  (v= (ag::permute/slice m2 #*0011 #*1001 m4 nil) #2a((2 14)
+                                                      (3 15)))
+  (v= (ag::permute/slice m2 #*0011 #*0101 m4 nil) #2a((6 14)
+                                                      (7 15)))
 
   ;; test with integer mask instead of bitvector
-  (v= (ag::permute/slice m3 #b1110 #b1101 m4 nil) #(1 2 3 9 10 11 13 14 15))
-  (v= (ag::permute/slice m3 #b1110 #b1011 m4 nil) #(1 2 3 5 6 7 13 14 15))
-  (v= (ag::permute/slice m2 #b1100 #b101 m4 nil) #(2 3 10 11))
-  (v= (ag::permute/slice m2 #b1100 #b1001 m4 nil) #(2 3 14 15))
-  (v= (ag::permute/slice m2 #b1100 #b1010 m4 nil) #(6 7 14 15)))
+  (v= (ag::permute/slice m3 #b1110 #b1101 m4 nil) #2a((1 9 13)
+                                                      (2 10 14)
+                                                      (3 11 15)))
+  (v= (ag::permute/slice m3 #b1110 #b1011 m4 nil) #2a((1 5 13)
+                                                      (2 6 14)
+                                                      (3 7 15)))
+  (v= (ag::permute/slice m2 #b1100 #b101 m4 nil) #2a((2 10)
+                                                     (3 11)))
+  (v= (ag::permute/slice m2 #b1100 #b1001 m4 nil) #2a((2 14)
+                                                      (3 15)))
+  (v= (ag::permute/slice m2 #b1100 #b1010 m4 nil) #2a((6 14)
+                                                      (7 15))))
+#++
+(test 'slice)
 
 (define-test (permute diag)
   :depends-on (matrix-type)
@@ -378,6 +459,7 @@
          :binds '((x 2.3)))
     (fail (funcall (ag:access a) 4 4))))
 
+#++
 (test 'scalar #+ :report 'interactive)
 
 
@@ -409,30 +491,107 @@
 
 
 (define-test (accessor lrot)
-  (let ((z2 (finish (ag:literal/rot m2 (/ pi 2) :z)))
-        (x3 (finish (ag:literal/rot m3 (/ pi 2) :x)))
-        (y3 (finish (ag:literal/rot m3 (/ pi 2) :y)))
-        (z3 (finish (ag:literal/rot m3 (/ pi 2) :z)))
-        (x4 (finish (ag:literal/rot m4 (/ pi 2) :x)))
-        (y4 (finish (ag:literal/rot m4 (/ pi 2) :y)))
-        (z4 (finish (ag:literal/rot m4 (/ pi 2) :z)))
-        )
-    (fail (ag:literal/rot m2 1 :x))
-    (fail (ag:literal/rot m2 1 :y))
-    (fail (ag:literal/rot m2x3 1 :x))
-    (fail (ag:literal/rot m3x2 1 :y))
-    (is = 1 (funcall (ag:access x3) 0 0))
-    (is = 0 (funcall (ag:access x3) 1 0))
-    (is = 0 (funcall (ag:access x3) 2 0))
-    (is = 0 (funcall (ag:access x3) 0 1))
-    (is = 0 (funcall (ag:access x3) 0 2))
+  (flet ((e (m i j)
+           (eval `(let (,@ (ag:binds m))
+                    ,(funcall (ag:access m) i j)))))
+   (let ((z2 (finish (ag:literal/rot m2 (/ pi 2) :z)))
+         (x3 (finish (ag:literal/rot m3 (/ pi 2) :x)))
+         (y3 (finish (ag:literal/rot m3 (/ pi 2) :y)))
+         (z3 (finish (ag:literal/rot m3 (/ pi 2) :z)))
+         (x4 (finish (ag:literal/rot m4 (/ pi 2) :x)))
+         (y4 (finish (ag:literal/rot m4 (/ pi 2) :y)))
+         (z4 (finish (ag:literal/rot m4 (/ pi 2) :z)))
+         (-s (- (float (sin (/ pi 2)) 1.0)))
+         (s (float (sin (/ pi 2)) 1.0))
+         (c (float (cos (/ pi 2)) 1.0)))
+     (fail (ag:literal/rot m2 1 :x))
+     (fail (ag:literal/rot m2 1 :y))
+     (fail (ag:literal/rot m2x3 1 :x))
+     (fail (ag:literal/rot m3x2 1 :y))
+
+     (is mi:ulp= c (e z2 0 0))
+     (is mi:ulp= c (e z2 1 1))
+     (is mi:ulp= -s (e z2 0 1))
+     (is mi:ulp= s (e z2 1 0))
+
+     (is = 1 (funcall (ag:access x3) 0 0))
+     (is = 0 (funcall (ag:access x3) 1 0))
+     (is = 0 (funcall (ag:access x3) 2 0))
+     (is = 0 (funcall (ag:access x3) 0 1))
+     (is = 0 (funcall (ag:access x3) 0 2))
+     (is mi:ulp= c (e x3 1 1))
+     (is mi:ulp= c (e x3 2 2))
+     (is mi:ulp= -s (e x3 1 2))
+     (is mi:ulp= s (e x3 2 1))
+
+     (is = 0 (funcall (ag:access y3) 0 1))
+     (is = 0 (funcall (ag:access y3) 1 0))
+     (is = 1 (funcall (ag:access y3) 1 1))
+     (is = 0 (funcall (ag:access y3) 2 1))
+     (is = 0 (funcall (ag:access y3) 2 1))
+     (is mi:ulp= c (e y3 0 0))
+     (is mi:ulp= c (e y3 2 2))
+     (is mi:ulp= s (e y3 0 2))
+     (is mi:ulp= -s (e y3 2 0))
+
+     (is = 0 (funcall (ag:access z3) 2 0))
+     (is = 0 (funcall (ag:access z3) 0 2))
+     (is = 0 (funcall (ag:access z3) 2 1))
+     (is = 0 (funcall (ag:access z3) 1 2))
+     (is = 1 (funcall (ag:access z3) 2 2))
+     (is mi:ulp= c (e z3 0 0))
+     (is mi:ulp= c (e z3 1 1))
+     (is mi:ulp= -s (e z3 0 1))
+     (is mi:ulp= s (e z3 1 0))
+
+     (is = 1 (funcall (ag:access x4) 0 0))
+     (is = 0 (funcall (ag:access x4) 1 0))
+     (is = 0 (funcall (ag:access x4) 2 0))
+     (is = 0 (funcall (ag:access x4) 0 1))
+     (is = 0 (funcall (ag:access x4) 0 2))
+     (is = 0 (funcall (ag:access x4) 0 3))
+     (is = 0 (funcall (ag:access x4) 1 3))
+     (is = 0 (funcall (ag:access x4) 2 3))
+     (is = 1 (funcall (ag:access x4) 3 3))
+     (is = 0 (funcall (ag:access x4) 3 0))
+     (is = 0 (funcall (ag:access x4) 3 1))
+     (is = 0 (funcall (ag:access x4) 3 2))
+     (is = 1 (funcall (ag:access x4) 3 3))
+
+     (is = 0 (funcall (ag:access y4) 0 1))
+     (is = 0 (funcall (ag:access y4) 1 0))
+     (is = 1 (funcall (ag:access y4) 1 1))
+     (is = 0 (funcall (ag:access y4) 2 1))
+     (is = 0 (funcall (ag:access y4) 2 1))
+     (is = 0 (funcall (ag:access y4) 0 3))
+     (is = 0 (funcall (ag:access y4) 1 3))
+     (is = 0 (funcall (ag:access y4) 2 3))
+     (is = 1 (funcall (ag:access y4) 3 3))
+     (is = 0 (funcall (ag:access y4) 3 0))
+     (is = 0 (funcall (ag:access y4) 3 1))
+     (is = 0 (funcall (ag:access y4) 3 2))
+     (is = 1 (funcall (ag:access y4) 3 3))
+
+     (is = 0 (funcall (ag:access z4) 2 0))
+     (is = 0 (funcall (ag:access z4) 0 2))
+     (is = 0 (funcall (ag:access z4) 2 1))
+     (is = 0 (funcall (ag:access z4) 1 2))
+     (is = 1 (funcall (ag:access z4) 2 2))
+     (is = 0 (funcall (ag:access z4) 0 3))
+     (is = 0 (funcall (ag:access z4) 1 3))
+     (is = 0 (funcall (ag:access z4) 2 3))
+     (is = 1 (funcall (ag:access z4) 3 3))
+     (is = 0 (funcall (ag:access z4) 3 0))
+     (is = 0 (funcall (ag:access z4) 3 1))
+     (is = 0 (funcall (ag:access z4) 3 2))
+     (is = 1 (funcall (ag:access z4) 3 3))
 
 
-)
+     ))
 )
 #++
-(test 'lrot :report 'interactive)
-
+(test 'lrot #+ :report 'interactive)
+(user-homedir-pathname)
 
 (define-test (accessor vec)
   (let* ((n 16)
@@ -755,8 +914,9 @@
 
 
 
-
+#++
 (test 'vec/transpose :report 'interactive)
+#++
 (let* ((n 16)
        (v (make-array n :element-type 'single-float)))
   (loop for i below n
