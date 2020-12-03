@@ -380,30 +380,31 @@
   (fail (ag::permute/diag v4 m3 nil))
   (fail (ag::permute/diag v5 m3 t))
   ;; normal diagonals (column-major)
-  (is equalp #(0 5 10 15) (ag::permute/diag v4 m4 nil))
-  (is equalp #(0 4 8) (ag::permute/diag v3 m3x4 nil))
-  (is equalp #(0 5 10) (ag::permute/diag v3 m4x3 nil))
+  (v= (ag::permute/diag v4 m4 nil) #2a((0) (5) (10) (15)))
+  (v= (ag::permute/diag v3 m3x4 nil) #2a((0) (4) (8)))
+  (v= (ag::permute/diag v3 m4x3 nil) #2a((0) (5) (10)))
 
-  (is equalp #(3 6 9 12) (ag::permute/diag v4 m4 t))
-  (is equalp #(2 4 6) (ag::permute/diag v3 m3x4 t))
-  (is equalp #(3 6 9) (ag::permute/diag v3 m4x3 t))
+  (v= (ag::permute/diag v4 m4 t) #2a((12) (9) (6) (3)))
+  (v= (ag::permute/diag v3 m3x4 t) #2a((9) (7) (5)))
+  (v= (ag::permute/diag v3 m4x3 t) #2a((8) (5) (2)))
   ;; row-major versions
-  (is equalp #(12 9 6 3) (ag::permute/diag v4 m4r t))
-  (is equalp #(0 5 10) (ag::permute/diag v3 m3x4r nil))
-  (is equalp #(0 4 8) (ag::permute/diag v3 m4x3r nil))
+  (v= (ag::permute/diag v4 m4r t) #2a((3) (6) (9) (12)))
+  (v= (ag::permute/diag v3 m3x4r nil) #2a((0) (5) (10)))
+  (v= (ag::permute/diag v3 m4x3r nil) #2a((0) (4) (8)))
 
-  (is equalp #(12 9 6 3) (ag::permute/diag v4 m4r t))
-  (is equalp #(8 5 2) (ag::permute/diag v3 m3x4r t))
-  (is equalp #(9 7 5) (ag::permute/diag v3 m4x3r t))
+  (v= (ag::permute/diag v4 m4r t) #2a((3) (6) (9) (12)))
+  (v= (ag::permute/diag v3 m3x4r t) #2a((3) (6) (9)))
+  (v= (ag::permute/diag v3 m4x3r t) #2a((2) (4) (6)))
   ;; row-vector output
-  (is equalp #(0 5 10 15) (ag::permute/diag v4r m4 nil))
-  (is equalp #(0 4 8) (ag::permute/diag v3r m3x4 nil))
-  (is equalp #(0 5 10) (ag::permute/diag v3r m4x3 nil))
+  (v= (ag::permute/diag v4r m4 nil) #2a((0 5 10 15)))
+  (v= (ag::permute/diag v3r m3x4 nil) #2a((0 4 8)))
+  (v= (ag::permute/diag v3r m4x3 nil) #2a((0 5 10)))
 
-  (is equalp #(3 6 9 12) (ag::permute/diag v4r m4 t))
-  (is equalp #(2 4 6) (ag::permute/diag v3r m3x4 t))
-  (is equalp #(3 6 9) (ag::permute/diag v3r m4x3 t)))
-
+  (v= (ag::permute/diag v4r m4 t) #2a((12 9 6 3)))
+  (v= (ag::permute/diag v3r m3x4 t) #2a((9 7 5)))
+  (v= (ag::permute/diag v3r m4x3 t) #2a((8 5 2))))
+#++
+(test 'diag)
 
 (define-test accessor)
 
@@ -557,6 +558,10 @@
      (is = 0 (funcall (ag:access x4) 3 1))
      (is = 0 (funcall (ag:access x4) 3 2))
      (is = 1 (funcall (ag:access x4) 3 3))
+     (is mi:ulp= c (e x4 1 1))
+     (is mi:ulp= c (e x4 2 2))
+     (is mi:ulp= -s (e x4 1 2))
+     (is mi:ulp= s (e x4 2 1))
 
      (is = 0 (funcall (ag:access y4) 0 1))
      (is = 0 (funcall (ag:access y4) 1 0))
@@ -571,6 +576,10 @@
      (is = 0 (funcall (ag:access y4) 3 1))
      (is = 0 (funcall (ag:access y4) 3 2))
      (is = 1 (funcall (ag:access y4) 3 3))
+     (is mi:ulp= c (e y4 0 0))
+     (is mi:ulp= c (e y4 2 2))
+     (is mi:ulp= s (e y4 0 2))
+     (is mi:ulp= -s (e y4 2 0))
 
      (is = 0 (funcall (ag:access z4) 2 0))
      (is = 0 (funcall (ag:access z4) 0 2))
@@ -585,6 +594,10 @@
      (is = 0 (funcall (ag:access z4) 3 1))
      (is = 0 (funcall (ag:access z4) 3 2))
      (is = 1 (funcall (ag:access z4) 3 3))
+     (is mi:ulp= c (e z4 0 0))
+     (is mi:ulp= c (e z4 1 1))
+     (is mi:ulp= -s (e z4 0 1))
+     (is mi:ulp= s (e z4 1 0))
 
 
      ))
@@ -887,7 +900,7 @@
                 9 10 11))
          (v (mv 4 1 0 1 2 3))
          (r (mv 1 4 0 1 2 3))
-         (ta (finish (ag:vec/transpose v4 m4 a)))
+         (ta (finish (ag:vec/transpose m4 m4 a)))
          (tb (finish (ag:vec/transpose m4x3 m3x4 b)))
          (tc (finish (ag:vec/transpose m3x4 m4x3 c)))
          (tr (finish (ag:vec/transpose v4 v4r r)))
@@ -906,16 +919,38 @@
                  (2 5 8 11)))
 
     (ac= tr #2a ((0) (1) (2) (3)))
-    (ac= tv #2a ((0 1 2 3)))
+    (ac= tv #2a ((0 1 2)))
 
-    (fail (ag:vec/transpose m2x4 m4 a))
-    (fail (ag:vec/transpose m4x2 m4x2 a))
-    (fail (ag:vec/transpose m3 m4 a))))
+    ;; not sure if transposed submatrices should be allowed? currently
+    ;; is
+
+    ;;(fail (ag:vec/transpose m2x4 m4 a))
+    ;;(fail (ag:vec/transpose m4x2 m4x2 a))
+    ;;(fail (ag:vec/transpose m3 m4 a))
+    (let ((a2x4 (finish (ag:vec/transpose m2x4 m4 a)))
+          (a4x2 (finish (ag:vec/transpose m4x2 m4 a)))
+          (a3 (finish (ag:vec/transpose m3 m4 a))))
+      (ac= a2x4 #2a((0 4 8 12)
+                    (1 5 9 13)))
+      (ac= a4x2 #2a((0 4)
+                    (1 5)
+                    (2 6)
+                    (3 7)))
+      (ac= a3 #2a ((0 4 8)
+                   (1 5 9)
+                   (2 6 10))))
+    (fail (ag:vec/transpose m2x4 m2x4 a))
+    (fail (ag:vec/transpose m2x4 m3 a))
+    (fail (ag:vec/transpose m4 m3 a))
+    (fail (ag:vec/transpose m4 m2x4 a))
+    (fail (ag:vec/transpose m4 m4x2 a))
+
+)))
 
 
 
 #++
-(test 'vec/transpose :report 'interactive)
+(test 'vec/transpose #+:report 'interactive)
 #++
 (let* ((n 16)
        (v (make-array n :element-type 'single-float)))
