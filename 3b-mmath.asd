@@ -10,4 +10,5 @@
                (:file "opt")
                (:file "accessors")
                (:file "permute")
-               (:file "matrix")))
+               (:file "matrix")
+               (:file "lib")))

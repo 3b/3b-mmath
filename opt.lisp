@@ -53,6 +53,8 @@
        v)
       ((numberp v)
        (coerce v type))
+      ((eql *opt* :remove-coerce)
+       v)
       (t
        `(coerce ,v ',type)))))
 
@@ -78,25 +80,18 @@
         (list* opt a))))
 
 (defmethod %opt ((opt (eql '-)) &rest args)
-  (let ((a (mapcar 'opt args)))(list* opt a))
-  #++(let ((a (mapcar 'opt args)))
-       (if *opt*
-           (let ((a (remove-if (lambda (x) (and (numberp x)
-                                                (= x 0)))
-                               a)))
-             (cond
-               ((every 'numberp a)
-                (apply '+ a))
-               ((some 'numberp a)
-                (let ((n (remove-if-not 'numberp a)))
-                  (if (= (length n) 1)
-                      (list* opt a)
-                      (list* opt (apply '+ n)  (remove-if 'numberp a)))))
-               ((eql a nil)
-                (coerce 0 *itype*))
-               ((eql (length a) 1)
-                (car a))
-               (t (list* opt a))))
+  (let ((a (mapcar 'opt args)))
+    (if *opt*
+        (cond
+          ((every 'numberp a)
+           (apply '- a))
+          #++
+          ((some 'numberp a)
+           (let ((n (remove-if-not 'numberp a)))
+             (if (= (length n) 1)
+                 (list* opt a)
+                 (list* opt (apply '+ n)  (remove-if 'numberp a)))))
+          (t (list* opt a)))
            (list* opt a))))
 
 (defmethod opt (op)

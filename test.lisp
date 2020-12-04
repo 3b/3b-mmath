@@ -5,7 +5,8 @@
   (:local-nicknames (#:a #:alexandria-2)
                     (#:ag #:3b-mmath/accessor-generator)
                     (#:m #:3b-mmath/matrix)
-                    (#:mi #:3b-mmath/misc)))
+                    (#:mi #:3b-mmath/misc)
+                    (#:l #:3b-mmath/lib)))
 
 (in-package #:3b-mmath-test)
 
@@ -777,10 +778,7 @@
     (fail (ag:submatrix 2 2 -1 0 (ag:vec m4 a)))
     (fail (ag:submatrix 2 2 3 3 (ag:vec m4 a)))
     (fail (ag:submatrix 2 2 0 4 (ag:vec m4 a)))
-    (fail (ag:submatrix 2 2 4 0 (ag:vec m4 a)))
-
-
-))
+    (fail (ag:submatrix 2 2 4 0 (ag:vec m4 a)))))
 
 (define-test (accessor submatrix*)
   (let* ((a (mv 4 4
@@ -790,16 +788,35 @@
                 12 13 14 15))
          ;; columns, as column vectors
          (c0 (finish (ag:submatrix* #*1111 #*1000 (ag:vec m4 a))))
+         (c0a (finish (ag:submatrix* -1 #*1000 (ag:vec m4 a))))
          ;; row as row vector
          (r3 (finish (ag:submatrix* #*0001 #*1111 (ag:vec m4 a))))
+         (r3a (finish (ag:submatrix* #*0001 -1 (ag:vec m4 a))))
          ;; 2x2s
          (m2@x (finish (ag:submatrix* #*0110 #*0110 (ag:vec m4 a))))
          (m2@y (finish (ag:submatrix* #*1010 #*1010 (ag:vec m4 a))))
          (m2@z (finish (ag:submatrix* #*1100 #*1100 (ag:vec m4 a))))
+         ;; stuff from determinant
+         (b (mv 3 3
+                0 1 2
+                3 4 5
+                6 7 8))
+         (lb (finish (ag:literal '(3 3)
+                                 0 1 2
+                                 3 4 5
+                                 6 7 8)))
+         (d0 (finish (ag:submatrix* #*011 #*011 (ag:vec m3 b))))
+         (d1 (finish (ag:submatrix* #*011 #*101 (ag:vec m3 b))))
+         (d2 (finish (ag:submatrix* #*011 #*110 (ag:vec m3 b))))
+         (d0l (finish (ag:submatrix* #*011 #*011 lb)))
+         (d1l (finish (ag:submatrix* #*011 #*101 lb)))
+         (d2l (finish (ag:submatrix* #*011 #*110 lb)))
          )
     (of-type 'ag::accessor c0)
     (ac= c0 #2a ((0) (4) (8) (12)))
     (ac= r3 #2a((12 13 14 15)))
+    (ac= c0a #2a ((0) (4) (8) (12)))
+    (ac= r3a #2a((12 13 14 15)))
 
     (ac= m2@x #2a((5 6)
                    (9 10)))
@@ -807,10 +824,38 @@
                    (8 10)))
     (ac= m2@z #2a((0 1)
                    (4 5)))
+
+    (ac= d0 #2a ((4 5)
+                 (7 8)))
+    (ac= d1 #2a ((3 5)
+                 (6 8)))
+    (ac= d2 #2a ((3 4)
+                 (6 7)))
+
+    (ac= d0l #2a ((4 5)
+                 (7 8)))
+    (ac= d1l #2a ((3 5)
+                 (6 8)))
+    (ac= d2l #2a ((3 4)
+                 (6 7)))
+
     (fail (ag:submatrix* #*11111 #*1111 (ag:vec m4 a)))
     (fail (ag:submatrix* #*1111 #*11111 (ag:vec m4 a)))
     (fail (ag:submatrix* #*0000 #*0000 (ag:vec m4 a)))
     (fail (ag:submatrix* #*00011 #*00011 (ag:vec m4 a)))))
+
+#++
+(test 'submatrix*)
+(let ((b (mv 3 3
+             0 1 2
+             3 4 5
+             6 7 8))
+      (lb (ag:literal '(3 3)
+                       0 1 2
+                       3 4 5
+                       6 7 8)))
+  (ag:submatrix* #*011 #*101 (ag:vec m3 b))
+  (ag:submatrix* #*011 #*101 lb))
 
 (define-test (accessor vec/diagonal)
   (let* ((a (mv 4 4
@@ -884,9 +929,40 @@
     (ac= tv #2a ((0 1 2)))))
 
 
+(define-test lib)
 
+(define-test (lib determinant)
+  (is = 18.0 (eval (l:determinant (ag:literal (3 3)
+                                              -2 2 -3
+                                              -1 1 3
+                                              2 0 -1))))
+  (is = 18.0 (eval `(let ((a -2) (b 2) (c -3)
+                          (d -1) (e 1) (f 3)
+                          (g 2) (h 0) (i 3))
+                      (l:determinant (ag:literal (3 3)
+                                                 a b c
+                                                 d e f
+                                                 g h i)))))
+  (is equalp `(- (+ (* A (- (+ (* F (- (* K P) (* L O)))
+                               (* H (- (* J O) (* K N))))
+                            (* G (- (* J P) (* L N)))))
+                    (* C (- (+ (* E (- (* J P) (* L N)))
+                               (* H (- (* I N) (* J M))))
+                            (* F (- (* I P) (* L M))))))
+                 (* B (- (+ (* E (- (* K P) (* L O)))
+                            (* H (- (* I O) (* K M))))
+                         (* G (- (* I P) (* L M)))))
+                 (* D (- (+ (* E (- (* J O) (* K N)))
+                            (* G (- (* I N) (* J M))))
+                         (* F (- (* I O) (* K M))))))
+      (macroexpand '(l:determinant (ag:literal (4 4)
+                                    a b c d
+                                    e f g h
+                                    i j k l
+                                    m n o p)
+                     :opt :remove-coerce))))
 #++
-(test 'vec/transpose #+:report 'interactive)
+(test 'determinant #+:report 'interactive)
 #++
 (let* ((n 16)
        (v (make-array n :element-type 'single-float)))

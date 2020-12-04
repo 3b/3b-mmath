@@ -36,7 +36,7 @@
                   (setf (aref v i2 j2) x))))
     v))
 
-(defun permute/slice (stype imask jmask prev transpose)
+(defun permute/slice (stype imask jmask prev)
   " generate a permutation for arbitrary submatrix of PREV
 
 IMASK and JMASK should be integers or bitvectors matching
@@ -60,8 +60,14 @@ as a 2x2 matrix
 
 i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
 "
-  (unless (typep prev '(array * 2))
-    (setf prev (matrix-type-permutation (matrix-type-designator prev))))
+  (setf prev
+        (etypecase prev
+          ((array * 2)
+           prev)
+          (accessor
+           (permute prev))
+          (matrix-type-designator
+           (matrix-type-permutation (matrix-type-designator prev)))))
   (labels ((mbit (i m)
              ;; accept bitvector or int for masks
              (if (typep m 'bit-vector)
@@ -79,13 +85,12 @@ i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
            (v (make-array (list sr sc) :initial-element 0))
            (imap (mask imask r))
            (jmap (mask jmask c)))
-      (when transpose (rotatef sr sc))
       (unless (and (<= sr r)
                    (<= sc c))
         (error "can't take ~sx~s slice submatrix from ~@[~*(transposed) ~]~sx~s matrix"
                (matrix-type-rows stype)
                (matrix-type-columns stype)
-               transpose
+               nil
                (array-dimension prev 0)
                (array-dimension prev 1)))
       (unless (and (= (length imap) sr)
@@ -99,9 +104,7 @@ i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
         do (loop
              for j below sc
              for x = (aref prev (aref imap i) (aref jmap j))
-             do (if transpose
-                    (setf (aref v j i) x)
-                    (setf (aref v i j) x))))
+             do (setf (aref v i j) x)))
       v)))
 
 (defun permute/diag (stype prev antidiagonal)
@@ -147,74 +150,6 @@ i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
     v))
 
 
-#++
-(defun vec/sub (stype i j type v &key (ofs 0) (base 0) (stride nil)
-                                   (transpose nil))
-  "Operate on submatrix of type STYPE at offset i,j in matrix of type
-TYPE stored in CL vector V, optionally starting from index (+ OFS (*
-BASE STRIDE)). Matrix is assumed to be tightly packed in V.
-
-Returns an ACCESSOR object containing info needed to access the matrix"
-  #++(setf type (matrix-type-designator type))
-  #++(setf stype (matrix-type-designator stype))
-  (let ((a (vec type v :ofs ofs :base base :stride stride)))
-    (make-permuted-accessor a stype (permute/sub stype i j type transpose))))
-#++
-(defun vec/slice (stype imask jmask type v
-                  &key (ofs 0) (base 0) (stride nil) (transpose nil))
-  "Operate on matrix of type STYPE containing intersection of
-specified rows/columns of matrix of type TYPE stored in CL vector V,
-optionally starting from index (+ OFS (* BASE STRIDE)). Matrix is
-assumed to be tightly packed in V.
-
-IMASK and JMASK should be integers or bitvectors matching
-corresponding dimensions of TYPE, with 1 bit indicating to include
-that row/column. (Note that bit 0 of the mask is the first row/column,
-so the bits in #* are in opposite order from #b
-
-for example:
-
-i=#*0101 j=#*1111 would access the first and third rows of a 4x4
-matrix as if they were a 2x4 matrix.
-
-i=#x*1010 j=#*1010 would acccess elements of a 4x4 marked with X below
-
-X . X .
-. . . .
-X . X .
-.......
-
-as a 2x2 matrix
-
-i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
-
-Returns an ACCESSOR object containing info needed to access the matrix"
-
-  (let ((a (vec type v :ofs ofs :base base :stride stride)))
-    (make-permuted-accessor a stype
-                            (permute/slice stype imask jmask type transpose))))
-#++
-(defun vec/diagonal (stype type v
-                     &key (ofs 0) (base 0) (stride nil) (anti nil))
-  "Operate on diagonal or antidiagonal of a matrix of type STYPE,
-stored as a vector of type TYPE)
-
-Returns an ACCESSOR object containing info needed to access the matrix"
-  (make-permuted-accessor (vec type v :ofs ofs :base base :stride stride)
-                          stype
-                          (permute/diag stype type anti)))
-#++
-(defun vec/transpose (stype type v
-                      &key (ofs 0) (base 0) (stride nil))
-  "Operate on matrix TYPE containing tranpose of matrix of type TYPE
-  stored in vector V
-
-Returns an ACCESSOR object containing info needed to access the matrix"
-  (make-permuted-accessor (vec type v :ofs ofs :base base :stride stride)
-                          stype
-                          (permute/transpose stype type)))
-
-
 
 (defun submatrix (rows columns i j v)
   "return accessor for a contiguous ROWS x COLUMNS submatrix at offset
@@ -223,7 +158,7 @@ I,J from matrix represented by accessore designator V"
          (base (mtype a))
          (stype (intern-matrix-type* rows columns base)))
     (make-permuted-accessor a stype
-                            (permute/sub stype i j base nil))))
+                            (permute/sub stype i j a nil))))
 
 (defun row (I v)
   "return accessor for row I of matrix represented by accessore
@@ -233,7 +168,7 @@ designator V as a row vector"
          (stype (intern-matrix-type* 1 (matrix-type-columns base)
                                      base)))
     (make-permuted-accessor a stype
-                            (permute/sub stype i 0 base nil))))
+                            (permute/sub stype i 0 a nil))))
 
 (defun column (j v)
   "return accessor for column J of matrix represented by accessore
@@ -243,21 +178,29 @@ designator V as a column vector"
          (stype (intern-matrix-type* (matrix-type-rows base) 1
                                      base)))
     (make-permuted-accessor a stype
-                            (permute/sub stype 0 j base nil))))
+                            (permute/sub stype 0 j a nil))))
 
 (defun submatrix* (imask jmask v)
   "return accessor for an arbitrary submatrix of matrix represented by
 accessore designator V, after removing rows corresponding to 0 in
 IMASK and columns corresponding to 0 in JMASK (see permute/slice)"
-  (flet ((cc (x)
-           (if (typep x 'vector)
-               (count 1 x)
-               (logcount x))))
+  (flet ((cc (x default)
+           (etypecase x
+             (vector
+              (count 1 x))
+             ;; allow -1 as a shortcut for "keep all"
+             ((eql -1)
+              default)
+             ((integer 1)
+              (logcount x)))))
    (let* ((a (accessor-designator v))
           (base (mtype a))
-          (stype (intern-matrix-type* (cc imask) (cc jmask) base)))
+          (stype (intern-matrix-type* (cc imask (matrix-type-rows base))
+                                      (cc jmask (matrix-type-rows base))
+                                      base
+                                      :row-major nil)))
      (make-permuted-accessor a stype
-                             (permute/slice stype imask jmask base nil)))))
+                             (permute/slice stype imask jmask a)))))
 
 (defun diagonal (v)
   "return accessor for diagonal of matrix represented by accessore
@@ -268,7 +211,7 @@ designator V as a column vector"
                  (matrix-type-columns base)))
          (stype (intern-matrix-type* c 1 base)))
     (make-permuted-accessor a stype
-                            (permute/diag stype base nil))))
+                            (permute/diag stype a nil))))
 
 (defun antidiagonal (v)
   "return accessor for diagonal of matrix represented by accessore
@@ -291,3 +234,20 @@ designator V"
          (stype (intern-matrix-type* rows columns base)))
     (make-permuted-accessor a stype
                             (permute/transpose stype base))))
+
+(defun bv1 (x)
+  (make-array x :element-type 'bit :initial-element 1))
+
+(defun remove-row+column (row column v)
+  "return accessor for matrix V with ROW and COLUMN removed"
+  (let* ((a (accessor-designator v))
+         (base (mtype a))
+         (rows (matrix-type-rows base))
+         (columns (matrix-type-columns base))
+         (stype (intern-matrix-type* (1- rows) (1- columns) base))
+         (imask (bv1 rows))
+         (jmask (bv1 columns)))
+    (setf (aref imask row) 0)
+    (setf (aref jmask column) 0)
+    (make-permuted-accessor a stype
+                            (permute/slice stype imask jmask a))))

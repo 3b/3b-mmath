@@ -165,6 +165,7 @@
   (stride 4 :type (and fixnum (integer 1)))
   (permutation (%permute/major 4 4 nil) :type (simple-array unsigned-fixnum 2)))
 
+(deftype matrix-type-designator () '(or matrix-type symbol cons))
 ;; possibly some of these should be stored directly in struct?
 (defun matrix-type-elements (matrix-type)
   (* (matrix-type-rows matrix-type)
@@ -189,10 +190,12 @@
                                       :permutation (%permute/major
                                                     rows columns row-major))))
 
-(defun intern-matrix-type* (rows columns base-type)
+(defun intern-matrix-type* (rows columns base-type &key (row-major nil rmp))
   (intern-matrix-type rows columns
                       :type (matrix-type-type base-type)
-                      :row-major (matrix-type-row-major base-type)))
+                      :row-major (if rmp
+                                     row-major
+                                     (matrix-type-row-major base-type))))
 
 ;; nibbles-style accessors for half floats
 (declaim (inline half-ref/le (setf half-ref/le)

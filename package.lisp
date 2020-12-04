@@ -64,9 +64,25 @@
    #:antidiagonal
    #:diagonal
    #:submatrix*
-   #:transpose))
+   #:transpose
+   #:remove-row+column))
 
 (defpackage #:3b-mmath/matrix
   (:use :cl #:3b-mmath/misc #:3b-mmath/opt)
   (:local-nicknames (#:a #:alexandria-2)
-                    (#:ag #:3b-mmath/accessor-generator)))
+                    (#:ag #:3b-mmath/accessor-generator))
+  (:export
+   #:matrix-mult
+   #:per-element
+   #:cross))
+
+
+(defpackage #:3b-mmath/lib
+  (:use :cl)
+  (:local-nicknames (#:a #:alexandria-2)
+                    (#:ag #:3b-mmath/accessor-generator)
+                    (#:m #:3b-mmath/matrix)
+                    (#:o #:3b-mmath/opt)
+                    (#:mi #:3b-mmath/misc))
+  (:export
+   #:determinant))
