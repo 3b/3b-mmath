@@ -1,12 +1,16 @@
 (in-package #:3b-mmath/accessor-generator)
 
+(defun permutation-designator (x)
+  (etypecase x
+    ((array * 2)
+     x)
+    (matrix-type
+     (matrix-type-permutation (matrix-type-designator x)))
+    (accessor
+     (permute x))))
 
 (defun permute/sub (stype i j prev transpose)
-  (etypecase prev
-    ((array * 2))
-    (matrix-type
-     (setf prev (matrix-type-permutation (matrix-type-designator prev))))
-    (accessor))
+  (setf prev (permutation-designator prev))
   (let* ((sr (matrix-type-rows stype))
          (sc (matrix-type-columns stype))
          (r (array-dimension prev 0))
@@ -60,14 +64,7 @@ as a 2x2 matrix
 
 i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
 "
-  (setf prev
-        (etypecase prev
-          ((array * 2)
-           prev)
-          (accessor
-           (permute prev))
-          (matrix-type-designator
-           (matrix-type-permutation (matrix-type-designator prev)))))
+  (setf prev (permutation-designator prev))
   (labels ((mbit (i m)
              ;; accept bitvector or int for masks
              (if (typep m 'bit-vector)
@@ -108,8 +105,7 @@ i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
       v)))
 
 (defun permute/diag (stype prev antidiagonal)
-  (unless (typep prev '(array * 2))
-    (setf prev (matrix-type-permutation (matrix-type-designator prev))))
+  (setf prev (permutation-designator prev))
   (let* ((sr (matrix-type-rows stype))
          (sc (matrix-type-columns stype))
          (r (array-dimension prev 0))
@@ -132,8 +128,7 @@ i=#b11 j=#b11 would be equivalent to 2x2 submatrix at offset 0,0
     v))
 
 (defun permute/transpose (stype prev)
-  (unless (typep prev '(array * 2))
-    (setf prev (matrix-type-permutation (matrix-type-designator prev))))
+  (setf prev (permutation-designator prev))
   (let* ((sr (matrix-type-rows stype))
          (sc (matrix-type-columns stype))
          (r (array-dimension prev 0))

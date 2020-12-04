@@ -286,89 +286,72 @@
 (define-test (permute slice)
   :depends-on (matrix-type)
   ;; wrong number of rows/columns
-  (fail (ag::permute/slice m2 #*1111 #*1111 m4 nil))
-  (fail (ag::permute/slice m2 #*1001 #*1111 m4 nil))
-  (fail (ag::permute/slice m2 #*0001 #*0011 m4 nil))
-  (fail (ag::permute/slice m2 #b1111 #b1111 m4 nil))
-  (fail (ag::permute/slice m2 #b0001 #b0011 m4 nil))
+  (fail (ag::permute/slice m2 #*1111 #*1111 m4))
+  (fail (ag::permute/slice m2 #*1001 #*1111 m4))
+  (fail (ag::permute/slice m2 #*0001 #*0011 m4))
+  (fail (ag::permute/slice m2 #b1111 #b1111 m4))
+  (fail (ag::permute/slice m2 #b0001 #b0011 m4))
 
   ;; variants that could use /sub
   ;; column vector
-  (v= (ag::permute/slice v4 #*1111 #*1000 m4 nil) #2a((0) (1) (2) (3)))
-  (v= (ag::permute/slice v4 #*1111 #*0010 m4 nil) #2a((8) (9) (10) (11)))
-  ;; column as row vector
-  (v= (ag::permute/slice v4r #*1111 #*1000 m4 t) #2a ((0 1 2 3)))
-  (v= (ag::permute/slice v4r #*1111 #*0010 m4 t) #2a ((8 9 10 11)))
+  (v= (ag::permute/slice v4 #*1111 #*1000 m4) #2a((0) (1) (2) (3)))
+  (v= (ag::permute/slice v4 #*1111 #*0010 m4) #2a((8) (9) (10) (11)))
 
   ;; row vector
-  (v= (ag::permute/slice v4r #*1000 #*1111 m4 nil) #2a ((0 4 8 12)))
-  (v= (ag::permute/slice v4r #*0010 #*1111 m4 nil) #2a ((2 6 10 14)))
-  ;; row as column vector
-  (v= (ag::permute/slice v4 #*1000 #*1111 m4 t) #2a((0) (4) (8) (12)))
-  (v= (ag::permute/slice v4 #*0010 #*1111 m4 t) #2a((2) (6) (10) (14)))
+  (v= (ag::permute/slice v4r #*1000 #*1111 m4) #2a ((0 4 8 12)))
+  (v= (ag::permute/slice v4r #*0010 #*1111 m4) #2a ((2 6 10 14)))
   ;; row vector, row-major
-  (v= (ag::permute/slice v4r #*1000 #*1111 m4r nil) #2a ((0 1 2 3)))
-  (v= (ag::permute/slice v4r #*0010 #*1111 m4r nil) #2a ((8 9 10 11)))
-  ;; row as column vector, row-major
-  (v= (ag::permute/slice v4 #*1000 #*1111 m4r t) #2a((0) (1) (2) (3)))
-  (v= (ag::permute/slice v4 #*0010 #*1111 m4r t) #2a((8) (9) (10) (11)))
+  (v= (ag::permute/slice v4r #*1000 #*1111 m4r) #2a ((0 1 2 3)))
+  (v= (ag::permute/slice v4r #*0010 #*1111 m4r) #2a ((8 9 10 11)))
 
 
   ;; 2x2
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4 nil) #2a((0 4)
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4) #2a((0 4)
                                                       (1 5)))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4 nil) #2a((10 14)
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4) #2a((10 14)
                                                       (11 15)))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4r nil) #2a((0 1)
+  (v= (ag::permute/slice m2 #*1100 #*1100 m4r) #2a((0 1)
                                                        (4 5)))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4r nil) #2a((10 11)
+  (v= (ag::permute/slice m2 #*0011 #*0011 m4r) #2a((10 11)
                                                        (14 15)))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4 t) #2a((0 1)
-                                                    (4 5)))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4 t) #2a((10 11)
-                                                    (14 15)))
-  (v= (ag::permute/slice m2 #*1100 #*1100 m4r t) #2a((0 4)
-                                                     (1 5)))
-  (v= (ag::permute/slice m2 #*0011 #*0011 m4r t) #2a((10 14)
-                                                     (11 15)))
 
   ;; non-contiguous submatrices
 
   ;; rows/columns
-  (v= (ag::permute/slice m4x2 #*1111 #*1010 m4 nil) #2a((0 8)
+  (v= (ag::permute/slice m4x2 #*1111 #*1010 m4) #2a((0 8)
                                                         (1 9)
                                                         (2 10)
                                                         (3 11)))
-  (v= (ag::permute/slice m2x4 #*1010 #*1111 m4 nil) #2a((0 4 8 12)
+  (v= (ag::permute/slice m2x4 #*1010 #*1111 m4) #2a((0 4 8 12)
                                                         (2 6 10 14)))
   ;; (various combinations used by determinant)
   ;; remove top row and middle column etc
-  (v= (ag::permute/slice m3 #*0111 #*1011 m4 nil) #2a((1 9 13)
+  (v= (ag::permute/slice m3 #*0111 #*1011 m4) #2a((1 9 13)
                                                       (2 10 14)
                                                       (3 11 15)))
-  (v= (ag::permute/slice m3 #*0111 #*1101 m4 nil) #2a((1 5 13)
+  (v= (ag::permute/slice m3 #*0111 #*1101 m4) #2a((1 5 13)
                                                       (2 6 14 )
                                                       (3 7 15))
 )
-  (v= (ag::permute/slice m2 #*0011 #*1010 m4 nil) #2a((2 10)
+  (v= (ag::permute/slice m2 #*0011 #*1010 m4) #2a((2 10)
                                                       (3 11)))
-  (v= (ag::permute/slice m2 #*0011 #*1001 m4 nil) #2a((2 14)
+  (v= (ag::permute/slice m2 #*0011 #*1001 m4) #2a((2 14)
                                                       (3 15)))
-  (v= (ag::permute/slice m2 #*0011 #*0101 m4 nil) #2a((6 14)
+  (v= (ag::permute/slice m2 #*0011 #*0101 m4) #2a((6 14)
                                                       (7 15)))
 
   ;; test with integer mask instead of bitvector
-  (v= (ag::permute/slice m3 #b1110 #b1101 m4 nil) #2a((1 9 13)
+  (v= (ag::permute/slice m3 #b1110 #b1101 m4) #2a((1 9 13)
                                                       (2 10 14)
                                                       (3 11 15)))
-  (v= (ag::permute/slice m3 #b1110 #b1011 m4 nil) #2a((1 5 13)
+  (v= (ag::permute/slice m3 #b1110 #b1011 m4) #2a((1 5 13)
                                                       (2 6 14)
                                                       (3 7 15)))
-  (v= (ag::permute/slice m2 #b1100 #b101 m4 nil) #2a((2 10)
+  (v= (ag::permute/slice m2 #b1100 #b101 m4) #2a((2 10)
                                                      (3 11)))
-  (v= (ag::permute/slice m2 #b1100 #b1001 m4 nil) #2a((2 14)
+  (v= (ag::permute/slice m2 #b1100 #b1001 m4) #2a((2 14)
                                                       (3 15)))
-  (v= (ag::permute/slice m2 #b1100 #b1010 m4 nil) #2a((6 14)
+  (v= (ag::permute/slice m2 #b1100 #b1010 m4) #2a((6 14)
                                                       (7 15))))
 #++
 (test 'slice)
@@ -890,6 +873,8 @@
     (ac= acb #2a ((3) (6) (9)))
     (ac= acc #2a ((2) (4) (6)))))
 
+#++
+(test 'vec/diagonal :report 'interactive)
 (define-test (accessor vec/transpose)
   (let* ((a (mv 4 4
                 0 1 2 3
