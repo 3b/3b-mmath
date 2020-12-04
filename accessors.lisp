@@ -308,7 +308,7 @@ Returns an ACCESSOR object containing info needed to access the matrix"
          (default-stride (matrix-type-octets type))
          (default-element-stride (matrix-type-stride type))
          (size (matrix-type-octets type))
-         (start (opt (print `(+ ,ofs (* ,base ,(or default-stride stride))))))
+         (start (opt `(+ ,ofs (* ,base ,(or default-stride stride)))))
          (end (opt `(+ ,start ,size -1))))
     (make-accessor
      (lambda (x)
