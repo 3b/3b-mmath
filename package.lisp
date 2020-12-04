@@ -74,7 +74,8 @@
   (:export
    #:matrix-mult
    #:per-element
-   #:cross))
+   #:cross
+   #:filter))
 
 
 (defpackage #:3b-mmath/lib
@@ -85,4 +86,5 @@
                     (#:o #:3b-mmath/opt)
                     (#:mi #:3b-mmath/misc))
   (:export
-   #:determinant))
+   #:determinant
+   #:copy))

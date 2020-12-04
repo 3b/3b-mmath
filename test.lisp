@@ -736,7 +736,19 @@
          ;; 2x2s
          (m2@00 (finish (ag:submatrix 2 2 0 0 (ag:vec m4 a))))
          (m2@11 (finish (ag:submatrix 2 2 1 1 (ag:vec m4 a))))
-         (m2@22 (finish (ag:submatrix 2 2 2 2 (ag:vec m4 a)))))
+         (m2@22 (finish (ag:submatrix 2 2 2 2 (ag:vec m4 a))))
+         (lb (finish (ag:literal '(3 3)
+                                 0 1 2
+                                 3 4 5
+                                 6 7 8)))
+         (rm (mv 4 4
+                 0 4 8 12
+                 1 5 9 13
+                 2 6 10 14
+                 3 7 11 15))
+         (l1 (finish (ag:submatrix 2 2 1 0 lb)))
+         (r1 (finish (ag:submatrix 2 2 1 0 (ag:vec m4r rm)))))
+
     (of-type 'ag::accessor c1)
     (ac= c0 #2a ((0) (4) (8) (12)))
     (ac= c1 #2a ((1) (5) (9) (13)))
@@ -756,6 +768,11 @@
                    (9 10)))
     (ac= m2@22 #2a((10 11)
                    (14 15)))
+
+    (ac= l1 #2a ((3 4)
+                 (6 7)))
+    (ac= r1 #2a ((4 5)
+                 (8 9)))
 
     (fail (ag:submatrix 2 2 -1 -1 (ag:vec m4 a)))
     (fail (ag:submatrix 2 2 -1 0 (ag:vec m4 a)))
@@ -896,7 +913,19 @@
          (tb (finish (ag:transpose (ag:vec m3x4 b))))
          (tc (finish (ag:transpose (ag:vec m4x3 c))))
          (tr (finish (ag:transpose (ag:vec v4r r))))
-         (tv (finish (ag:transpose (ag:vec v3 v)))))
+         (tv (finish (ag:transpose (ag:vec v3 v))))
+         (lb (finish (ag:literal '(4 3)
+                                 0 1 2
+                                 3 4 5
+                                 6 7 8
+                                 9 10 11)))
+         (rm (mv 4 4
+                 0 4 8 12
+                 1 5 9 13
+                 2 6 10 14
+                 3 7 11 15))
+         (l1 (finish (ag:transpose lb)))
+         (r1 (finish (ag:transpose (ag:vec m4r rm)))))
     (of-type 'ag::accessor ta)
     (ac= ta #2a ((0 4 8 12)
                  (1 5 9 13)
@@ -911,8 +940,60 @@
                  (2 5 8 11)))
 
     (ac= tr #2a ((0) (1) (2) (3)))
-    (ac= tv #2a ((0 1 2)))))
+    (ac= tv #2a ((0 1 2)))
 
+    (ac= lb #2a ((0 1 2)
+                 (3 4 5)
+                 (6 7 8)
+                 (9 10 11)))
+    (ac= (ag:vec m4r rm) #2a ((0 1 2 3)
+                              (4 5 6 7)
+                              (8 9 10 11)
+                              (12 13 14 15)))
+    (ac= l1 #2a ((0 3 6 9)
+                 (1 4 7 10)
+                 (2 5 8 11)))
+    (ac= r1 #2a ((0 4 8 12)
+                 (1 5 9 13)
+                 (2 6 10 14)
+                 (3 7 11 15)))
+
+    (ac= (ag:row 1 r1) #2a ((1 5 9 13)))))
+
+(define-test (accessor combined)
+  (cffi:with-foreign-object (p :float 16)
+    (let* ((v (mv 4 4
+                  0.25 0.5 0.75 1
+                  2 4 6 8
+                  44 45 46 47
+                  55 66 77 88))
+           ;(mv (finish (ag:vec m4 v)))
+           (b (make-array (* 4 4 4) :element-type '(unsigned-byte 8)
+                                    :initial-element 1))
+           (b2 (make-array (* 4 4 4) :element-type '(unsigned-byte 8)
+                                     :initial-element 1))
+           (bv (ag:bvec m4 b))
+           (bvr (ag:bvec m4r b2))
+           (fv (ag:ffivec m4 p)))
+      (finish (l:copy (ag:bvec m4 b) (ag:vec m4 v)))
+      (finish (l:copy (ag:bvec m4r b2) (ag:vec m4 v)))
+      (finish (l:copy (ag:ffivec m4 p) (ag:bvec m4 b)))
+
+      (ac= bvr #2a ((0.25 0.5 0.75 1)
+                    (2 4 6 8)
+                    (44 45 46 47)
+                    (55 66 77 88)))
+      (ac= fv #2a ((0.25 0.5 0.75 1)
+                   (2 4 6 8)
+                   (44 45 46 47)
+                   (55 66 77 88)))
+      (ac= (ag:row 1 bv) #2a ((2 4 6 8)))
+      (ac= (ag:column 1 fv) #2a ((0.5) (4) (45) (66)))
+      (ac= (ag:transpose (ag:diagonal bv)) #2a ((0.25 4 46 88)))
+      (ac= (ag:row 1 (ag:transpose bvr)) #2A ((0.5 4 45 66))))))
+
+#++
+(test 'combined)
 
 (define-test lib)
 

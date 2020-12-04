@@ -2,6 +2,9 @@
 
 ;;; library of code generators for more specific operations
 
+(defmacro copy (dest src)
+  `(m:filter nil ,dest ,src))
+
 (defmacro determinant (accessor &key ((:opt o:*opt*) t))
   (setf accessor (ag:accessor-designator accessor))
   ;; must be square matrix

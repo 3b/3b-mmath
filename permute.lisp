@@ -217,7 +217,7 @@ designator V as a column vector"
                  (matrix-type-columns base)))
          (stype (intern-matrix-type* c 1 base)))
     (make-permuted-accessor a stype
-                            (permute/diag stype base t))))
+                            (permute/diag stype a t))))
 
 (defun transpose (v)
   "return accessor for tranpose of matrix represented by accessore
@@ -228,7 +228,7 @@ designator V"
          (columns (matrix-type-rows base))
          (stype (intern-matrix-type* rows columns base)))
     (make-permuted-accessor a stype
-                            (permute/transpose stype base))))
+                            (permute/transpose stype a))))
 
 (defun bv1 (x)
   (make-array x :element-type 'bit :initial-element 1))
