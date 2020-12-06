@@ -6,6 +6,7 @@
   :depends-on (alexandria #++ ieee-floats float-features nibbles cffi)
   :serial t
   :components ((:file "package")
+               (:file "types")
                (:file "misc")
                (:file "opt")
                (:file "accessors")
