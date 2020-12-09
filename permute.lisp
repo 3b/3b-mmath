@@ -155,23 +155,29 @@ I,J from matrix represented by accessore designator V"
     (make-permuted-accessor a stype
                             (permute/sub stype i j a nil))))
 
-(defun row (I v)
+(defun row (I v &key columns)
   "return accessor for row I of matrix represented by accessore
-designator V as a row vector"
+designator V as a row vector. Optionally, only include first COLUMNS
+elements."
   (let* ((a (accessor-designator v))
          (base (mtype a))
-         (stype (intern-matrix-type* 1 (matrix-type-columns base)
+         (stype (intern-matrix-type* 1 (or columns (matrix-type-columns base))
                                      base)))
+    (when columns
+      (assert (<= 0 columns (matrix-type-columns base))))
     (make-permuted-accessor a stype
                             (permute/sub stype i 0 a nil))))
 
-(defun column (j v)
+(defun column (j v &key rows)
   "return accessor for column J of matrix represented by accessore
-designator V as a column vector"
+designator V as a column vector. Optionally, only include first ROWS
+elements."
   (let* ((a (accessor-designator v))
          (base (mtype a))
-         (stype (intern-matrix-type* (matrix-type-rows base) 1
+         (stype (intern-matrix-type* (or rows (matrix-type-rows base)) 1
                                      base)))
+    (when rows
+      (assert (<= 0 rows (matrix-type-rows base))))
     (make-permuted-accessor a stype
                             (permute/sub stype 0 j a nil))))
 
@@ -188,14 +194,14 @@ IMASK and columns corresponding to 0 in JMASK (see permute/slice)"
               default)
              ((integer 1)
               (logcount x)))))
-   (let* ((a (accessor-designator v))
-          (base (mtype a))
-          (stype (intern-matrix-type* (cc imask (matrix-type-rows base))
-                                      (cc jmask (matrix-type-rows base))
-                                      base
-                                      :row-major nil)))
-     (make-permuted-accessor a stype
-                             (permute/slice stype imask jmask a)))))
+    (let* ((a (accessor-designator v))
+           (base (mtype a))
+           (stype (intern-matrix-type* (cc imask (matrix-type-rows base))
+                                       (cc jmask (matrix-type-rows base))
+                                       base
+                                       :row-major nil)))
+      (make-permuted-accessor a stype
+                              (permute/slice stype imask jmask a)))))
 
 (defun diagonal (v)
   "return accessor for diagonal of matrix represented by accessore

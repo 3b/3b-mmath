@@ -11,5 +11,7 @@
                (:file "opt")
                (:file "accessors")
                (:file "permute")
+               (:file "dsl")
                (:file "matrix")
+               (:file "lines")
                (:file "lib")))

@@ -23,6 +23,9 @@
   (* (matrix-type-elements matrix-type)
      (matrix-type-stride matrix-type)))
 
+(defun matrix-type-dimensions (matrix-type)
+  (list (matrix-type-rows matrix-type)
+        (matrix-type-columns matrix-type)))
 
 (defparameter *matrix-types* (make-hash-table :test 'equalp))
 

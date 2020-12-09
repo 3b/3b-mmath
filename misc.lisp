@@ -127,20 +127,20 @@
                            collect `((equalp type ',l)
                                      ',f))
                      (t (error "unknown type ~s?" type)))))
-      (c
-       ((signed-byte 8) :int8)
-       ((signed-byte 16) :int16)
-       ((signed-byte 32) :int32)
-       ((signed-byte 64) :int64)
+    (c
+     ((signed-byte 8) :int8)
+     ((signed-byte 16) :int16)
+     ((signed-byte 32) :int32)
+     ((signed-byte 64) :int64)
 
-       ((unsigned-byte 8) :uint8)
-       ((unsigned-byte 16) :uint16)
-       ((unsigned-byte 32) :uint32)
-       ((unsigned-byte 64) :uint64)
+     ((unsigned-byte 8) :uint8)
+     ((unsigned-byte 16) :uint16)
+     ((unsigned-byte 32) :uint32)
+     ((unsigned-byte 64) :uint64)
 
-       ((:half-float short-float) half)
-       (single-float :float)
-       (double-float :double))))
+     ((:half-float short-float) half)
+     (single-float :float)
+     (double-float :double))))
 
 
 
@@ -182,6 +182,9 @@
 (defun all-of-type (type &rest r)
   (every (lambda (a) (typep a type)) r))
 
+;; todo: extend this to check specific values when permuted, for
+;; example 2 distinct row vectors from a column-major matrix shouldn't
+;; overlap
 (defun accesses-overlap (a b)
   (and a b
        (destructuring-bind (av as ae) a

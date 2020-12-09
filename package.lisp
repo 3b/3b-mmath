@@ -25,7 +25,8 @@
    #:matrix-type-permutation
    #:ffi-type
    #:ulp=
-   #:intern-matrix-type*))
+   #:intern-matrix-type*
+   #:matrix-type-dimensions))
 
 (defpackage #:3b-mmath/opt
   (:use :cl)
@@ -65,18 +66,41 @@
    #:diagonal
    #:submatrix*
    #:transpose
-   #:remove-row+column))
+   #:remove-row+column
+   #:accessor
+   #:make-checked-accessor))
+
+(defpackage #:3b-mmath/util
+  (:use :cl)
+  (:local-nicknames (#:a #:alexandria-2)
+                    (#:ag #:3b-mmath/accessor-generator)
+                    (#:mi #:3b-mmath/misc))
+  (:export
+   #:checked
+   #:row-matrix-accessor-p
+   #:same-size-matrix-accessor-p
+   #:column-matrix-accessor-p
+   #:with-checked-accessors
+   #:with-sources
+   #:with-dest
+   #:with-accessor-designators
+   #:with-column-vectors
+   #:assert-same-shape
+   #:with-operands
+   #:assert-square-matrices
+   #:with-overlap-checks))
 
 (defpackage #:3b-mmath/matrix
   (:use :cl #:3b-mmath/misc #:3b-mmath/opt)
   (:local-nicknames (#:a #:alexandria-2)
-                    (#:ag #:3b-mmath/accessor-generator))
+                    (#:ag #:3b-mmath/accessor-generator)
+                    (#:mu #:3b-mmath/util))
   (:export
    #:matrix-mult
    #:per-element
    #:cross
-   #:filter))
-
+   #:filter
+   #:per-element*))
 
 (defpackage #:3b-mmath/lib
   (:use :cl)
@@ -84,7 +108,20 @@
                     (#:ag #:3b-mmath/accessor-generator)
                     (#:m #:3b-mmath/matrix)
                     (#:o #:3b-mmath/opt)
-                    (#:mi #:3b-mmath/misc))
+                    (#:mi #:3b-mmath/misc)
+                    (#:mu #:3b-mmath/util))
   (:export
    #:determinant
-   #:copy))
+   #:copy
+   #:normalize))
+
+
+(defpackage #:3b-mmath/lines
+  (:use :cl #:3b-mmath/misc #:3b-mmath/opt)
+  (:local-nicknames (#:a #:alexandria-2)
+                    (#:ag #:3b-mmath/accessor-generator)
+                    (#:m #:3b-mmath/matrix)
+                    (#:l #:3b-mmath/lib)
+                    (#:mu #:3b-mmath/util))
+  (:export
+   #:interpolate-points))
