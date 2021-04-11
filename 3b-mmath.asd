@@ -1,17 +1,26 @@
 (defsystem 3b-mmath
-  :description "graphics math (small vectors/matrices etc) meta-library"
-  :version "0.0.1"
+  :description "Experimental meta-math-library for computer graphics"
   :author "Bart Botta <00003b at gmail.com>"
   :license "MIT"
-  :depends-on (alexandria #++ ieee-floats float-features nibbles cffi)
+  :depends-on (alexandria 3b-walker introspect-environment)
+  :in-order-to ((asdf:test-op (asdf:test-op 3b-mmath/test)))
   :serial t
   :components ((:file "package")
-               (:file "types")
-               (:file "misc")
-               (:file "opt")
-               (:file "accessors")
-               (:file "permute")
+               (:file "storage")
+               (:file "permutations")
+               (:file "broadcast")
+               (:file "scalar")
+               (:file "compiler-common")
+               (:file "ops")
+               (:file "transforms")
                (:file "dsl")
-               (:file "matrix")
-               (:file "lines")
-               (:file "lib")))
+               (:file "mcompiler")
+               (:file "ccompiler")))
+
+
+(defsystem 3b-mmath/test
+  :depends-on (3b-mmath nibbles parachute)
+  :serial t
+  :perform
+  (asdf:test-op (op c) (uiop:symbol-call :parachute :test :3b-mmath/test))
+  :components ((:file "test")))
