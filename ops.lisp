@@ -93,7 +93,8 @@
                       do (setf (aref odims i) (max (aref odims i) b))))
        (let ((broadcast (find 0 odims)))
          (when broadcast
-           (error "todo per-element with broadcast output ~s" odims))
+           ;; for now, just flatten broadcasts ;; fixme: is this right?
+           (setf odims (substitute 1 0 odims)))
          (let ((p (make-array (coerce odims 'list))))
            (map-dimensions (coerce odims 'list)
                            (lambda (x)
