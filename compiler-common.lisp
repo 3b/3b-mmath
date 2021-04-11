@@ -14,6 +14,7 @@
                               reshape*
                               replace
                               wrap
+                              slice
                               make-scalar
                               make-literal-matrix))
 

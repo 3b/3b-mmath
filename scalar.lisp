@@ -17,9 +17,10 @@
   (read-element (base p) (aref (permutation p))))
 
 (defun is-scalar (a)
-  (let ((d (dimensions a)))
-    (or (eql nil d)
-        (loop for i in d always (<= 0 i 1)))))
+  (and (typep a 'permutation)
+       (let ((d (dimensions a)))
+         (or (eql nil d)
+             (loop for i in d always (<= 0 i 1))))))
 
 (defun scalar-value (a)
   (assert (is-scalar a))
@@ -28,5 +29,9 @@
         (read-element a (make-list (length d) :initial-element 0))
         (read-element a ()))))
 
+(defun scalar?-value (a)
+  (if (is-scalar a)
+      (scalar-value a)
+      a))
 
 

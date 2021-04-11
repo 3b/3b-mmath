@@ -16,4 +16,5 @@
    #:scalar
    #:reshape*
    #:make-literal-matrix
-   #:add-meta-function))
+   #:add-meta-function
+   #:slice))
