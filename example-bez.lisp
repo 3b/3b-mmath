@@ -141,6 +141,10 @@
                 :initial-contents (list (float x 1d0)
                                         (float y 1d0)
                                         (float z 1d0))))
+(defun v2d (x y)
+  (make-array 2 :element-type 'double-float
+                :initial-contents (list (float x 1d0)
+                                        (float y 1d0))))
 
 (defmacro with-v3d ((&rest vars) &body body)
   `(let (,@ (loop for v in vars collect `(,v (wrap v3d ,v))))
@@ -159,6 +163,16 @@
     (with-v3d (b1 b2 b3)
       (eval-quadratic-bezier b1 b2 b3 at))))
 
+(deftype v2d () '(v 2 double-float))
+(defwrap v2d () '(cl-vector (2) :type :auto))
+(defmacro with-v2d ((&rest vars) &body body)
+  `(let (,@ (loop for v in vars collect `(,v (wrap v2d ,v))))
+     ,@body))
+(defun eval-quadratic-bezier/v2 (b1 b2 b3 at)
+  (mm ()
+    (with-v2d (b1 b2 b3)
+      (eval-quadratic-bezier b1 b2 b3 at))))
+
 (defun eqb/ref (a b c at)
   (coerce
    (loop for i below 3
@@ -168,11 +182,15 @@
    'v3d))
 (let ((a (v3d 1 2 0))
       (b (v3d 3 4 0))
-      (c (v3d 4 5 0)))
+      (c (v3d 4 5 0))
+      (a2 (v2d 1 2))
+      (b2 (v2d 3 4))
+      (c2 (v2d 4 5)))
  (loop for i from 0d0 upto 1d0 by 0.0625
-       do (format t "~8f = ~s~%         ? ~s~%" i
+       do (format t "~8f = ~s~%         ? ~s~%         ? ~s~%" i
                   (eval-quadratic-bezier/v a b c i)
-                  (eqb/ref a b c i))))
+                  (eqb/ref a b c i)
+                  (eval-quadratic-bezier/v2 a2 b2 c2 i))))
 (defun eval-quadratic-bezier/pool (dest pool o1 o2 o3 at)
   ;; allocate a vector for return value, with no name. MM will
   ;; implicitly copy contents of accessor returned by last form into
