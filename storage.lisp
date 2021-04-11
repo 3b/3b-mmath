@@ -60,7 +60,6 @@
 ;;; generate code to read an element
 (defmethod read-element ((s storage-cl-vector) index &key skip-bounds-check)
   (assert (typep index `(integer 0 (,(size s)))))
-  #++(assert (<= 0 index (1- (size s))))
   ;; if SKIP-BOUNDS-CHECK is set, we try to generate code that assumes
   ;; we know index refers to a valid element of VARIABLE, for example
   ;; by running code from BOUNDS-CHECK (and agreeing not to call

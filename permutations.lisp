@@ -73,15 +73,6 @@
     (map-dimensions dimensions (lambda (c)
                                  (setf (apply #'aref a c)
                                        c)))
-    #++
-    (labels ((nd (i d)
-               (when d
-                 (multiple-value-bind (x r)
-                     (floor i (car d))
-                   (cons r (nd x (cdr d)))))))
-     (loop for i below size
-           for c = (nd i dimensions)
-           do (setf (apply #'aref a c) c)))
     (make-instance 'matrix :base base :permutation a)))
 
 (defun column-major-matrix (base &rest dimensions)

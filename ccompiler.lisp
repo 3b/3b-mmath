@@ -99,12 +99,6 @@
                          (walker expand-wrappers))
   (let ((wrap (get-wrap (rtype node)))
         (args (args node)))
-    (format t "~&expand wrapper ~s / ~s / ~s~% "
-            (car wrap) (cdr wrap)
-            args)
-    (format t "-> ~s~%"(wrapper (car wrap) (cdr wrap)
-                             (env walker)
-                             args))
     (w:sexp->ast (wrapper (car wrap) (cdr wrap)
                           (env walker)
                           args))))
@@ -127,8 +121,7 @@
 (defun run-passes (code passes)
   (let ((ast (w:sexp->ast code)))
     (loop for pass in passes
-          do (format t "~&=== running pass ~s~%" pass)
-             (setf ast (w:filter-ast ast pass)))
+          do (setf ast (w:filter-ast ast pass)))
     (w:ast->sexp ast)))
 
 
@@ -136,24 +129,21 @@
   (flet ((wrap (v)
            (let ((info (multiple-value-list
                         (introspect-environment:variable-information v env))))
-             (format t "wrap var ~s as ~s~%" v info)
              (let ((type (get-var-type v env)))
-               (format t " -> ~s~%" type)
-               (print
-                (typecase type
-                  ((or (member vector array simple-array)
-                       (cons (member vector array simple-array)))
-                   (error "implicit wrapper for variable declared with non-scalar type ~s?"
-                          type))
-                  ((not (or null (eql t)))
-                   `(wrap (scalar ,type) ,v))
-                  (t
-                   `(wrap scalar ,v))))))))
+               (typecase type
+                 ((or (member vector array simple-array)
+                      (cons (member vector array simple-array)))
+                  (error "implicit wrapper for variable declared with non-scalar type ~s?"
+                         type))
+                 ((not (or null (eql t)))
+                  `(wrap (scalar ,type) ,v))
+                 (t
+                  `(wrap scalar ,v)))))))
    (let ((*free-vars* nil))
      (run-passes form '(find-free-vars))
      (let ((wraps (loop for i in *free-vars*
                         collect (list i (wrap i)))))
-       (print `(let ,wraps ,form))))))
+       `(let ,wraps ,form)))))
 
 (defun ccompile (form env &key &allow-other-keys)
   (with-dsl-environment ()
@@ -162,8 +152,7 @@
                            (make-instance 'expand-wrappers :env env)
                            'expand-wrappers
                            *ccompiler-passes*))))
-      (let ((r (funcall (compile nil (print`(lambda () ,m))))))
-        (format t "ccompile returns ~s~%" r)
+      (let ((r (funcall (compile nil `(lambda () ,m)))))
         (etypecase r
           (scalar
            (scalar-value r))
@@ -171,7 +160,6 @@
            (let* ((d (array-dimensions (permutation r)))
                   (c (reduce '* d))
                   (el (element-type r)))
-             (format t " = operation ~s (~s / ~s)~%" d c el)
              (if d
                  (a:with-gensyms (ret)
                    `(let ((,ret (make-array ,c :element-type ',el)))
@@ -187,7 +175,7 @@
                                                      a i
                                                      :type (element-type r))
                                       forms)))
-                           (print (nreverse forms)))
+                           (nreverse forms))
                       ,ret))
                  (error "todo, is returning empty operation valid?")))))))))
 
@@ -205,7 +193,6 @@
   ;; ignore, but check and error if arguments alias), :DUPLICATE
   ;; (generate code for ignore and allow, and pick depending on
   ;; runtime test)
-
-  (print (ccompile `(mprogn ,@body)
-             env
-             :runtime-overlap runtime-overlap)))
+  (ccompile `(mprogn ,@body)
+            env
+            :runtime-overlap runtime-overlap))

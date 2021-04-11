@@ -24,8 +24,7 @@
   (with-dsl-environment ()
    (let ((ast (w:sexp->ast body)))
      (loop for pass in *mcompiler-passes*
-           do (format t "~&=== running mpass ~s~%" pass)
-              (setf ast (w:filter-ast ast pass)))
+           do (setf ast (w:filter-ast ast pass)))
      (w:ast->sexp ast))))
 
 (defmacro mprogn (&whole whole &body body)

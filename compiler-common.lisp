@@ -90,20 +90,13 @@ included in list of operators that enter vector context. "
             (gethash (w:name (w:binding node)) *meta-functions*)
             (not *vector-context*))
         node
-        (progn
-          (let ((*package* (find-package :keyword)))
-            (format t "expanding ~s to per-element, enter=~s,meta=~s,v=~s~%"
-                    (w:name (w:binding node))
-                    enter
-                    (gethash (w:name (w:binding node)) *meta-functions*)
-                    *vector-context*))
-          (apply 'w::make-function-call
-                 ;; not sure if this can accept a binding object or not,
-                 ;; so extract name (probably can't now, but might be able
-                 ;; to if α etc are implemented as AST transforms rather
-                 ;; than macros or sexp transforms?
-                 'per-element (list 'quote (w:name (w:binding node)))
-                 (w:args node))))))
+        (apply 'w::make-function-call
+               ;; not sure if this can accept a binding object or not,
+               ;; so extract name (probably can't now, but might be able
+               ;; to if α etc are implemented as AST transforms rather
+               ;; than macros or sexp transforms?
+               'per-element (list 'quote (w:name (w:binding node)))
+               (w:args node)))))
 
 
 (defclass expand-aliases (scalar-vector-pass)
@@ -143,8 +136,6 @@ included in list of operators that enter vector context. "
            (atom node)
            (not (typep node 'w:ast-node))
            (not (symbolp node)))
-      (progn
-        (format t "wrapping ~s @ ~s~%" node *vector-context*)
-       (w::make-function-call 'make-scalar t node))
+      (w::make-function-call 'make-scalar t node)
       (call-next-method)))
 
