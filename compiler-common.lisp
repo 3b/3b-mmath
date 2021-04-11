@@ -2,7 +2,6 @@
 
 (defvar *meta-functions* (make-hash-table))
 (defun add-meta-function (name)
-  (format t "add meta function ~s (was ~s)~%" name (gethash name *meta-functions* :unset))
   (setf (gethash name *meta-functions*) t))
 
 ;; adding separately from def to make runtime recompilation easier
@@ -63,9 +62,7 @@ included in list of operators that enter vector context. "
 
 (defmethod w:filter-ast ((node w:macro-application)
                          (walker scalar-vector-pass))
-  (format t "macro @ ~s~%" (w:name (w:binding node)))
   (maybe-vector-context (node enter)
-    (when enter (format t "enter @ ~s~%" (w:name (w:binding node))))
     (call-next-method)))
 
 (defmethod w:filter-ast ((node w:special-form-application)

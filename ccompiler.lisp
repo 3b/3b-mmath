@@ -127,18 +127,16 @@
 
 (defun implicit-wrappers (form env)
   (flet ((wrap (v)
-           (let ((info (multiple-value-list
-                        (introspect-environment:variable-information v env))))
-             (let ((type (get-var-type v env)))
-               (typecase type
-                 ((or (member vector array simple-array)
-                      (cons (member vector array simple-array)))
-                  (error "implicit wrapper for variable declared with non-scalar type ~s?"
-                         type))
-                 ((not (or null (eql t)))
-                  `(wrap (scalar ,type) ,v))
-                 (t
-                  `(wrap scalar ,v)))))))
+           (let ((type (get-var-type v env)))
+             (typecase type
+               ((or (member vector array simple-array)
+                    (cons (member vector array simple-array)))
+                (error "implicit wrapper for variable declared with non-scalar type ~s?"
+                       type))
+               ((not (or null (eql t)))
+                `(wrap (scalar ,type) ,v))
+               (t
+                `(wrap scalar ,v))))))
    (let ((*free-vars* nil))
      (run-passes form '(find-free-vars))
      (let ((wraps (loop for i in *free-vars*
