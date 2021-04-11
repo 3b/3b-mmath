@@ -1,4 +1,5 @@
 #++(ql:quickload '(3b-mmath/test))
+#++(asdf:test-system '3b-mmath)
 (defpackage #:3b-mmath/test
   (:use :parachute :cl)
   (:local-nicknames (:m :3b-mmath)))
